@@ -25,3 +25,8 @@
 #define STATUS_REPORT_INTERVAL_MS 5000
 
 #endif
+
+#define OLED_SDA_PIN    21
+#define OLED_SCL_PIN    22
+#define OLED_ADDRESS    0x3C
+

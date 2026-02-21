@@ -1,0 +1,229 @@
+#include <HardwareSerial.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+// Define pins for ESP32-S3
+#define OLED_SDA_PIN 8
+#define OLED_SCL_PIN 9
+#define OLED_ADDRESS 0x3C
+
+#define GPS_RX_PIN 17
+#define GPS_TX_PIN 18
+#define GPS_BAUD 9600
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+HardwareSerial GPSSerial(1);
+
+struct GPSData {
+    double latitude;
+    double longitude;
+    float heading;
+    uint8_t fix_quality;
+    uint8_t num_satellites;
+    float hdop;
+    float altitude;
+    bool valid;
+};
+
+GPSData gpsData;
+unsigned long lastDisplayUpdate = 0;
+const unsigned long DISPLAY_UPDATE_INTERVAL = 500;
+
+void setup() {
+    Serial.begin(115200);
+    
+    // Initialize I2C for OLED
+    Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
+    
+    if(!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
+        Serial.println("SSD1306 allocation failed");
+        for(;;);
+    }
+    
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0,0);
+    display.println("GPS Test Starting");
+    display.println("BE-880 GPS/Compass");
+    display.println("Waiting for data...");
+    display.display();
+    
+    // Initialize GPS serial with pins
+    GPSSerial.begin(GPS_BAUD, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
+    
+    Serial.println("BE-880 GPS/Compass Test with Display");
+    Serial.println("Waiting for GPS data...");
+}
+
+void parseGPGGA(char* sentence) {
+    char* token;
+    int fieldNum = 0;
+    
+    token = strtok(sentence, ",");
+    while (token != NULL && fieldNum < 15) {
+        switch (fieldNum) {
+            case 1:
+                if (strlen(token) > 0) {
+                    double rawLat = atof(token);
+                    int degrees = (int)(rawLat / 100);
+                    double minutes = rawLat - (degrees * 100);
+                    gpsData.latitude = degrees + (minutes / 60.0);
+                }
+                break;
+            case 2:
+                if (token[0] == 'S') gpsData.latitude = -gpsData.latitude;
+                break;
+            case 3:
+                if (strlen(token) > 0) {
+                    double rawLon = atof(token);
+                    int degrees = (int)(rawLon / 100);
+                    double minutes = rawLon - (degrees * 100);
+                    gpsData.longitude = degrees + (minutes / 60.0);
+                }
+                break;
+            case 4:
+                if (token[0] == 'W') gpsData.longitude = -gpsData.longitude;
+                break;
+            case 6:
+                gpsData.fix_quality = atoi(token);
+                break;
+            case 7:
+                gpsData.num_satellites = atoi(token);
+                break;
+            case 8:
+                gpsData.hdop = atof(token);
+                break;
+            case 9:
+                gpsData.altitude = atof(token);
+                break;
+        }
+        token = strtok(NULL, ",");
+        fieldNum++;
+    }
+    
+    gpsData.valid = (gpsData.fix_quality > 0);
+}
+
+void parseGPHDT(char* sentence) {
+    char* token;
+    int fieldNum = 0;
+    
+    token = strtok(sentence, ",");
+    while (token != NULL && fieldNum < 3) {
+        if (fieldNum == 1 && strlen(token) > 0) {
+            gpsData.heading = atof(token);
+        }
+        token = strtok(NULL, ",");
+        fieldNum++;
+    }
+}
+
+bool verifyChecksum(char* sentence) {
+    char* asterisk = strchr(sentence, '*');
+    if (asterisk == NULL) return false;
+    
+    uint8_t checksum = 0;
+    for (char* p = sentence + 1; p < asterisk; p++) {
+        checksum ^= *p;
+    }
+    
+    uint8_t receivedChecksum = strtol(asterisk + 1, NULL, 16);
+    return (checksum == receivedChecksum);
+}
+
+void updateDisplay() {
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setCursor(0,0);
+    
+    if (gpsData.valid) {
+        display.print("Fix: ");
+        display.print(gpsData.fix_quality);
+        display.print(" Sats: ");
+        display.println(gpsData.num_satellites);
+        
+        display.print("Lat: ");
+        display.println(gpsData.latitude, 6);
+        
+        display.print("Lon: ");
+        display.println(gpsData.longitude, 6);
+        
+        display.print("Hdg: ");
+        display.print(gpsData.heading, 1);
+        display.println(" deg");
+        
+        display.print("Alt: ");
+        display.print(gpsData.altitude, 1);
+        display.println(" m");
+        
+        display.print("HDOP: ");
+        display.println(gpsData.hdop, 1);
+    } else {
+        display.setTextSize(2);
+        display.println("No GPS");
+        display.println("Fix");
+        display.setTextSize(1);
+        display.println("");
+        display.print("Sats: ");
+        display.println(gpsData.num_satellites);
+    }
+    
+    display.display();
+}
+
+void processNMEA(char* sentence) {
+    if (!verifyChecksum(sentence)) {
+        Serial.println("Checksum failed!");
+        return;
+    }
+    
+    if (strstr(sentence, "$GPGGA") || strstr(sentence, "$GNGGA")) {
+        parseGPGGA(sentence);
+        
+        if (gpsData.valid) {
+            Serial.println("\n--- GPS Fix ---");
+            Serial.print("Lat: "); Serial.print(gpsData.latitude, 7);
+            Serial.print(" Lon: "); Serial.println(gpsData.longitude, 7);
+            Serial.print("Fix: "); Serial.print(gpsData.fix_quality);
+            Serial.print(" Sats: "); Serial.print(gpsData.num_satellites);
+            Serial.print(" HDOP: "); Serial.println(gpsData.hdop, 1);
+            Serial.print("Alt: "); Serial.print(gpsData.altitude, 1); Serial.println(" m");
+        }
+    } else if (strstr(sentence, "$GPHDT") || strstr(sentence, "$GNHDT")) {
+        parseGPHDT(sentence);
+        Serial.print("Heading: "); Serial.print(gpsData.heading, 1); Serial.println("°");
+    }
+}
+
+char nmeaBuffer[128];
+int bufferIndex = 0;
+
+void loop() {
+    while (GPSSerial.available()) {
+        char c = GPSSerial.read();
+        
+        if (c == '$') {
+            bufferIndex = 0;
+            nmeaBuffer[bufferIndex++] = c;
+        } else if (c == '\n' || c == '\r') {
+            if (bufferIndex > 0) {
+                nmeaBuffer[bufferIndex] = '\0';
+                processNMEA(nmeaBuffer);
+                bufferIndex = 0;
+            }
+        } else if (bufferIndex < sizeof(nmeaBuffer) - 1) {
+            nmeaBuffer[bufferIndex++] = c;
+        }
+    }
+    
+    if (millis() - lastDisplayUpdate >= DISPLAY_UPDATE_INTERVAL) {
+        updateDisplay();
+        lastDisplayUpdate = millis();
+    }
+}
