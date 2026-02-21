@@ -16,13 +16,21 @@
 - CRC error detection
 - Automatic frequency correction
 
-## SPI Interface
-- **MOSI:** Connect to ESP32 GPIO 23
-- **MISO:** Connect to ESP32 GPIO 19
-- **SCK:** Connect to ESP32 GPIO 18
-- **CS (Chip Select):** Connect to ESP32 GPIO 5
-- **RST (Reset):** Connect to ESP32 GPIO 14
-- **G0/IRQ (DIO0):** Connect to ESP32 GPIO 27 (interrupt for RX/TX done)
+## SPI Interface (ESP32-S3-DevKitC-1 — buoys)
+- **MOSI:** Connect to ESP32-S3 GPIO 11
+- **MISO:** Connect to ESP32-S3 GPIO 13
+- **SCK:** Connect to ESP32-S3 GPIO 12
+- **CS (Chip Select):** Connect to ESP32-S3 GPIO 10
+- **RST (Reset):** Connect to ESP32-S3 GPIO 14
+- **G0/IRQ (DIO0):** Connect to ESP32-S3 GPIO 21 (interrupt for RX/TX done)
+
+## SPI Interface (NodeMCU-32S — remote control)
+- **MOSI:** Connect to NodeMCU-32S GPIO 23
+- **MISO:** Connect to NodeMCU-32S GPIO 19
+- **SCK:** Connect to NodeMCU-32S GPIO 18
+- **CS (Chip Select):** Connect to NodeMCU-32S GPIO 5
+- **RST (Reset):** Connect to NodeMCU-32S GPIO 14
+- **G0/IRQ (DIO0):** Connect to NodeMCU-32S GPIO 4
 
 ## Power Requirements
 - **Supply Voltage:** 3.3V (from ESP32 3.3V rail)

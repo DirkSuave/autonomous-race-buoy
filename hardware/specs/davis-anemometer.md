@@ -27,14 +27,14 @@
 ### Wind Speed Signal
 - **Type:** Digital pulse output
 - **Signal:** Open collector or TTL
-- **Connection:** ESP32 GPIO 35 (interrupt capable)
+- **Connection:** ESP32-S3 GPIO 6 (ADC1_CH5, interrupt capable)
 - **Logic:** Each pulse = specific wind speed increment
 - **Calculation:** Speed = (pulses per second) * conversion factor
 
 ### Wind Direction Signal
 - **Type:** Analog voltage
 - **Range:** 0-3.3V (or use voltage divider from 5V)
-- **Connection:** ESP32 GPIO 36 (ADC1_CH0)
+- **Connection:** ESP32-S3 GPIO 5 (ADC1_CH4) — ADC1, WiFi-safe
 - **Calculation:** Direction = (ADC_value / ADC_max) * 360
 
 ## Wind Speed Calculation
@@ -49,8 +49,8 @@ void IRAM_ATTR windSpeedISR() {
 }
 
 void setup() {
-    pinMode(35, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(35), windSpeedISR, FALLING);
+    pinMode(6, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(6), windSpeedISR, FALLING);
 }
 
 float getWindSpeed() {
@@ -75,7 +75,7 @@ float getWindSpeed() {
 ### ADC Reading Method
 ```cpp
 float getWindDirection() {
-    int adcValue = analogRead(36);  // 12-bit ADC (0-4095)
+    int adcValue = analogRead(5);  // 12-bit ADC (0-4095), GPIO 5 = ADC1_CH4
     float voltage = (adcValue / 4095.0) * 3.3;
     float direction = (voltage / 3.3) * 360.0;
     return direction;
@@ -176,9 +176,9 @@ bool isWindStable() {
 - Weatherproof connections
 - Use shielded cable to ESP32 (reduce noise)
 
-## Wiring
-- **Wind Speed Pulse:** GPIO 35 (with pull-up)
-- **Wind Direction Analog:** GPIO 36
+## Wiring (ESP32-S3-DevKitC-1)
+- **Wind Speed Pulse:** GPIO 6 (with pull-up, ADC1_CH5)
+- **Wind Direction Analog:** GPIO 5 (ADC1_CH4)
 - **Power:** 5V rail
 - **Ground:** Common ground
 

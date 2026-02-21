@@ -70,15 +70,13 @@
   - Deadband: ±25µs
   - Slew-rate limiting for smooth thrust ramping
 
-## Remote Control Unit
-- **Purpose:** Handheld device for race control
-- **Status:** Features TBD - requires further specification
-- **Planned Features:**
-  - LoRa communication with Master buoy
-  - Race start/stop commands
-  - Buoy status monitoring display
-  - Emergency override controls
-  - Battery-powered (rechargeable)
+## Remote Control Unit (qty: 2 identical units)
+- **MCU:** NodeMCU-32S (ESP32-WROOM-32) — smaller form factor than buoy boards
+- **Radio:** Adafruit RFM95W LoRa 915 MHz (same as buoys)
+- **Interface:** 3× status LEDs (amber/green/red), 2× waterproof buttons, buzzer
+- **Power:** Small LiPo (500–1000 mAh) via TP4056 charger
+- **Enclosure:** IP67/IP68 waterproof — dinghy racing, capsize exposure
+- **Accessories required:** TP4056 LiPo charger module, IP67 enclosure, sealed LED holders, waterproof push buttons, rubber USB-C port plug
 
 ## Bill of Materials Status
 - [ ] Create detailed BOM with part numbers

@@ -15,7 +15,7 @@
 // GPS (UART)
 #define GPS_RX_PIN      18
 #define GPS_TX_PIN      17
-#define GPS_BAUD        115200
+#define GPS_BAUD        9600
 
 // OLED display (I2C) — ESP32-S3 defaults
 #define OLED_SDA_PIN    8

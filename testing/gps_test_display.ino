@@ -2,15 +2,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-
-// Define pins for ESP32-S3
-#define OLED_SDA_PIN 8
-#define OLED_SCL_PIN 9
-#define OLED_ADDRESS 0x3C
-
-#define GPS_RX_PIN 17
-#define GPS_TX_PIN 18
-#define GPS_BAUD 9600
+#include "../common/config.h"
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64

@@ -10,8 +10,8 @@
 
 ## I2C Configuration
 - **Address:** 0x3C (default) or 0x3D
-- **SDA:** Connect to ESP32 GPIO 21
-- **SCL:** Connect to ESP32 GPIO 22
+- **SDA:** Connect to ESP32-S3 GPIO 8
+- **SCL:** Connect to ESP32-S3 GPIO 9
 - **Speed:** 400 kHz (fast mode)
 - **Pull-ups:** 2.2kΩ to 3.3V (usually on-board)
 
@@ -96,11 +96,11 @@ void setup() {
 - **Partial Updates:** Only redraw changed values
 - **Priority:** GPS and LoRa status most important
 
-## Wiring
-- **VCC:** 3.3V (ESP32 3.3V pin)
+## Wiring (ESP32-S3-DevKitC-1)
+- **VCC:** 3.3V (ESP32-S3 3.3V pin)
 - **GND:** Common ground
-- **SDA:** GPIO 21
-- **SCL:** GPIO 22
+- **SDA:** GPIO 8
+- **SCL:** GPIO 9
 
 ## Testing Checklist
 - [ ] Verify I2C communication (I2C scanner)

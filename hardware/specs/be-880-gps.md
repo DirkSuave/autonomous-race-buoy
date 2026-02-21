@@ -19,11 +19,11 @@
 - **Max Velocity:** 515 m/s
 
 ### UART Configuration
-- **Baud Rate:** 9600 (default), can configure to 115200
+- **Baud Rate:** 9600 (default — keep at default)
 - **Format:** 8N1 (8 data bits, no parity, 1 stop bit)
 - **Protocol:** NMEA 0183
-- **TX:** Module TX -> ESP32 GPIO 16 (RX)
-- **RX:** Module RX -> ESP32 GPIO 17 (TX)
+- **TX:** Module TX → ESP32-S3 GPIO 18 (RX)
+- **RX:** Module RX → ESP32-S3 GPIO 17 (TX)
 
 ### NMEA Sentences Used
 - **$GPGGA:** Position, altitude, fix quality, satellites
@@ -50,8 +50,8 @@
 
 ### I2C Configuration
 - **Address:** 0x0D (QMC5883L) or 0x1E (HMC5883L)
-- **SDA:** Connect to ESP32 GPIO 21
-- **SCL:** Connect to ESP32 GPIO 22
+- **SDA:** Connect to ESP32-S3 GPIO 8
+- **SCL:** Connect to ESP32-S3 GPIO 9
 - **Pull-ups:** 2.2kΩ to 3.3V (may be on-board)
 
 ### Calibration Procedure
@@ -120,10 +120,10 @@ double bearing(double lat1, double lon1, double lat2, double lon2) {
 ## Wiring
 - **VCC:** 3.3V or 5V (check module specs)
 - **GND:** Common ground
-- **TX (GPS):** To ESP32 RX (GPIO 16)
-- **RX (GPS):** To ESP32 TX (GPIO 17)
-- **SDA (Compass):** To ESP32 SDA (GPIO 21)
-- **SCL (Compass):** To ESP32 SCL (GPIO 22)
+- **TX (GPS):** To ESP32-S3 RX (GPIO 18)
+- **RX (GPS):** To ESP32-S3 TX (GPIO 17)
+- **SDA (Compass):** To ESP32-S3 SDA (GPIO 8)
+- **SCL (Compass):** To ESP32-S3 SCL (GPIO 9)
 
 ## Testing Checklist
 - [ ] Verify GPS UART output (raw NMEA)

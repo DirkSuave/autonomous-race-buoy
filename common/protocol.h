@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define MAX_BUOYS 5
+#define MAX_BUOYS 6
 #define LORA_MAX_PAYLOAD 251
 
 enum BuoyState {
@@ -16,71 +16,77 @@ enum BuoyState {
 };
 
 enum PacketType {
-    PKT_ASSIGN = 0x01,
-    PKT_ACK_ASSIGN = 0x02,
-    PKT_STATUS = 0x03,
-    PKT_PING_STATUS = 0x04
+    PKT_ASSIGN      = 0xA5,  // Master → slave: target coordinates
+    PKT_ACK_ASSIGN  = 0xAA,  // Slave → master: assignment acknowledged
+    PKT_STATUS      = 0x5A,  // Slave → master: position/battery telemetry
+    PKT_PING_STATUS = 0x55,  // Heartbeat
+    PKT_RC_START    = 0xB1,  // Remote control → master: start race
+    PKT_RC_STOP     = 0xB2   // Remote control → master: stop/abort race
 };
 
 enum BuoyID {
-    BUOY_MASTER = 0,
-    BUOY_START_A = 1,
-    BUOY_START_B = 2,
+    BUOY_MASTER   = 0,
+    BUOY_START_A  = 1,
+    BUOY_START_B  = 2,
     BUOY_WINDWARD = 3,
-    BUOY_LEEWARD = 4
+    BUOY_LEEWARD  = 4,
+    BUOY_REMOTE   = 5   // Handheld remote control unit (two identical units, same ID)
 };
 
 struct GPSPosition {
-    double latitude;
-    double longitude;
+    float   latitude;
+    float   longitude;
     uint8_t fix_quality;
-    float hdop;
+    float   hdop;
 };
 
-struct AssignPacket {
-    uint8_t packet_type;
-    uint8_t buoy_id;
-    uint16_t seq;
-    double target_lat;
-    double target_lon;
-    float hold_radius;
-    uint32_t timestamp;
-    uint8_t checksum;
+// Master → slave: assign target position (13 bytes)
+struct __attribute__((packed)) AssignPacket {
+    uint8_t  packet_type;   // PKT_ASSIGN (0xA5)
+    uint8_t  buoy_id;
+    float    target_lat;
+    float    target_lon;
+    uint8_t  hold_radius;   // metres
+    uint16_t checksum;      // CRC16-CCITT
 };
 
-struct AckAssignPacket {
-    uint8_t packet_type;
-    uint8_t buoy_id;
-    uint16_t seq;
-    uint8_t accepted;
-    double current_lat;
-    double current_lon;
-    uint8_t checksum;
+// Slave → master: confirm receipt of assignment (13 bytes)
+struct __attribute__((packed)) AckAssignPacket {
+    uint8_t  packet_type;   // PKT_ACK_ASSIGN (0xAA)
+    uint8_t  buoy_id;
+    uint8_t  accepted;      // 1 = accepted, 0 = rejected
+    float    current_lat;
+    float    current_lon;
+    uint16_t checksum;      // CRC16-CCITT
 };
 
-struct StatusPacket {
-    uint8_t packet_type;
-    uint8_t buoy_id;
-    uint8_t state;
-    uint8_t gps_fix;
-    double current_lat;
-    double current_lon;
-    float heading;
-    float dist_to_target;
-    float battery_voltage;
-    uint8_t error_flags;
-    int8_t rssi;
-    int8_t snr;
-    uint8_t checksum;
+// Slave → master: position and battery telemetry (15 bytes)
+struct __attribute__((packed)) StatusPacket {
+    uint8_t  packet_type;       // PKT_STATUS (0x5A)
+    uint8_t  buoy_id;
+    float    current_lat;
+    float    current_lon;
+    uint16_t dist_to_target_cm; // Distance to assigned target in centimetres
+    uint8_t  battery_tenths_v;  // Battery voltage in 0.1V units (e.g. 148 = 14.8V)
+    uint16_t checksum;          // CRC16-CCITT
 };
 
-struct PingStatusPacket {
-    uint8_t packet_type;
-    uint8_t buoy_id;
-    uint32_t timestamp;
-    uint8_t checksum;
+// Heartbeat (8 bytes)
+struct __attribute__((packed)) PingStatusPacket {
+    uint8_t  packet_type;   // PKT_PING_STATUS (0x55)
+    uint8_t  buoy_id;
+    uint32_t timestamp;     // millis()
+    uint16_t checksum;      // CRC16-CCITT
 };
 
+// Remote control → master: start or stop race (4 bytes)
+struct __attribute__((packed)) RcCommandPacket {
+    uint8_t  packet_type;   // PKT_RC_START (0xB1) or PKT_RC_STOP (0xB2)
+    uint8_t  buoy_id;       // BUOY_REMOTE
+    uint16_t checksum;      // CRC16-CCITT
+};
+
+// Error flags (StatusPacket.error_flags if extended packet added in future)
 #define ERROR_FLAG_GPS_LOST     0x01
 #define ERROR_FLAG_COMPASS_FAIL 0x02
 #define ERROR_FLAG_LOW_BATTERY  0x04
@@ -88,18 +94,21 @@ struct PingStatusPacket {
 #define ERROR_FLAG_COMMS_LOST   0x10
 #define ERROR_FLAG_WIND_FAIL    0x20
 
-#define HOLD_RADIUS_DEFAULT 5.0f
-#define COMMS_TIMEOUT_MS 30000
-#define GPS_FIX_REQUIRED 3
-#define HOLD_TIME_REQUIRED_S 10
+// Operational constants
+#define HOLD_RADIUS_DEFAULT         3       // metres (default slave hold radius)
+#define COMMS_TIMEOUT_MS            60000   // 60s without ASSIGN → slave enters failsafe
+#define GPS_FIX_REQUIRED            3       // Minimum fix quality (3D fix)
+#define HOLD_TIME_REQUIRED_S        10      // Seconds on-station before HOLD confirmed
 
-#define WIND_CHANGE_THRESHOLD_DEG 12.0f
-#define WIND_CHANGE_DURATION_S 30
+// Master wind stability constants
+#define WIND_CHANGE_THRESHOLD_DEG   15.0f   // Max wind shift before Repositioning
+#define WIND_CHANGE_DURATION_S      60      // Rolling window for stability check
 
-#define REPLY_DELAY_BASE_MS 100
-#define REPLY_DELAY_PER_ID_MS 50
+// LoRa reply timing (deterministic stagger to avoid collisions)
+#define REPLY_DELAY_BASE_MS         100
+#define REPLY_DELAY_PER_ID_MS       50
 
-uint8_t calculate_checksum(uint8_t* data, size_t len);
-bool verify_checksum(uint8_t* data, size_t len);
+uint16_t calculate_checksum(uint8_t* data, size_t len);
+bool     verify_checksum(uint8_t* data, size_t len);
 
-#endif
+#endif // PROTOCOL_H

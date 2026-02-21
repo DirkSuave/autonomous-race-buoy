@@ -78,12 +78,20 @@ firmware/
 
 ## Key Hardware
 
+**Buoys (master + 3 slaves) — ESP32-S3-DevKitC-1:**
 - **MCU:** ESP32-S3-DevKitC-1 (dual-core Xtensa, WiFi/BT, USB OTG)
 - **Radio:** Adafruit RFM95W LoRa 915 MHz (RadioHead `RH_RF95`)
-- **GPS/Compass:** BE-880 module (UART NMEA + I2C QMC5883)
-- **Anemometer:** Davis Vantage Pro (pulse-count speed + analog 0–3.3V direction)
+- **GPS/Compass:** BE-880 module (UART NMEA + I2C QMC5883) at **9600 baud**
+- **Anemometer:** Davis Vantage Pro (master only — pulse speed + analog 0–3.3V direction)
 - **Display:** SSD1306 0.96" I2C OLED (128×64)
 - **Power:** 4S LiPo → 5V buck converter; monitor via ADC with 11:1 voltage divider
+
+**Remote Control (2 identical waterproof units) — NodeMCU-32S:**
+- **MCU:** NodeMCU-32S (ESP32-WROOM-32, original ESP32 — different pin defaults than S3)
+- **Radio:** Adafruit RFM95W LoRa 915 MHz (VSPI: MOSI=23, MISO=19, SCK=18, CS=5, IRQ=4)
+- **Interface:** 3 LEDs (amber/green/red) + buzzer + 2 waterproof buttons — no display
+- **Enclosure:** IP67/IP68 waterproof — unit carried on racing dinghy, capsize exposure
+- **Pinout:** `hardware/pinouts/remote-pinout.md`
 
 ## Reference Documentation
 
