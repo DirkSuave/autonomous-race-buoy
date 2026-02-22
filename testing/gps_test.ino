@@ -130,6 +130,7 @@ int bufferIndex = 0;
 void loop() {
     while (GPSSerial.available()) {
         char c = GPSSerial.read();
+        Serial.write(c); // forward raw GPS byte to USB serial for debugging
         
         if (c == '$') {
             bufferIndex = 0;

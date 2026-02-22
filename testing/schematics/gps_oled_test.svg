@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560"
+     font-family="monospace" font-size="12">
+
+  <!-- Background -->
+  <rect width="900" height="560" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="450" y="32" text-anchor="middle" font-size="18" font-weight="bold" fill="#1a1a1a">
+    GPS + OLED Test Circuit — ESP32-S3-DevKitC-1
+  </text>
+  <text x="450" y="52" text-anchor="middle" font-size="11" fill="#555">
+    testing/gps_test_display.ino  |  open in any web browser  |  edit in Inkscape
+  </text>
+
+  <!-- ══════════════════════════════════════════════
+       ESP32-S3 (center)
+  ══════════════════════════════════════════════ -->
+  <rect x="310" y="80" width="280" height="380" rx="8" fill="#e8f0fe" stroke="#2563eb" stroke-width="2"/>
+  <text x="450" y="104" text-anchor="middle" font-size="13" font-weight="bold" fill="#1d4ed8">ESP32-S3-DevKitC-1</text>
+
+  <!-- Left-side pin labels (GPIO facing left → toward GPS) -->
+  <!-- 3V3 -->
+  <text x="400" y="145" text-anchor="end" font-size="11" fill="#dc2626">3V3</text>
+  <circle cx="410" cy="141" r="4" fill="#dc2626"/>
+  <!-- GND -->
+  <text x="400" y="175" text-anchor="end" font-size="11" fill="#444">GND</text>
+  <circle cx="410" cy="171" r="4" fill="#444"/>
+  <!-- GPIO 18 = GPS_RX_PIN -->
+  <text x="400" y="215" text-anchor="end" font-size="11" fill="#16a34a">GPIO 18</text>
+  <text x="400" y="228" text-anchor="end" font-size="10" fill="#555">GPS_RX_PIN</text>
+  <circle cx="410" cy="220" r="4" fill="#16a34a"/>
+  <!-- GPIO 17 = GPS_TX_PIN -->
+  <text x="400" y="265" text-anchor="end" font-size="11" fill="#16a34a">GPIO 17</text>
+  <text x="400" y="278" text-anchor="end" font-size="10" fill="#555">GPS_TX_PIN</text>
+  <circle cx="410" cy="270" r="4" fill="#16a34a" stroke="#555" stroke-width="1" stroke-dasharray="4,2"/>
+
+  <!-- Right-side pin labels (GPIO facing right → toward OLED) -->
+  <!-- 3V3 (same rail) -->
+  <text x="500" y="145" text-anchor="start" font-size="11" fill="#dc2626">3V3</text>
+  <circle cx="490" cy="141" r="4" fill="#dc2626"/>
+  <!-- GND -->
+  <text x="500" y="175" text-anchor="start" font-size="11" fill="#444">GND</text>
+  <circle cx="490" cy="171" r="4" fill="#444"/>
+  <!-- GPIO 8 = OLED_SDA_PIN -->
+  <text x="500" y="335" text-anchor="start" font-size="11" fill="#1d4ed8">GPIO 8</text>
+  <text x="500" y="348" text-anchor="start" font-size="10" fill="#555">OLED_SDA_PIN</text>
+  <circle cx="490" cy="340" r="4" fill="#1d4ed8"/>
+  <!-- GPIO 9 = OLED_SCL_PIN -->
+  <text x="500" y="385" text-anchor="start" font-size="11" fill="#1d4ed8">GPIO 9</text>
+  <text x="500" y="398" text-anchor="start" font-size="10" fill="#555">OLED_SCL_PIN</text>
+  <circle cx="490" cy="390" r="4" fill="#1d4ed8" stroke="#555" stroke-width="1" stroke-dasharray="4,2"/>
+
+  <!-- USB-C label at bottom of ESP32 -->
+  <rect x="390" y="440" width="120" height="24" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="450" y="456" text-anchor="middle" font-size="11" fill="#1d4ed8">USB-C (power + flash)</text>
+
+  <!-- ══════════════════════════════════════════════
+       BE-880 GPS Module (left)
+  ══════════════════════════════════════════════ -->
+  <rect x="50" y="150" width="190" height="200" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <text x="145" y="174" text-anchor="middle" font-size="13" font-weight="bold" fill="#15803d">BE-880 GPS</text>
+  <text x="145" y="190" text-anchor="middle" font-size="10" fill="#555">UART + I2C QMC5883</text>
+
+  <!-- GPS pin labels (right side, facing ESP32) -->
+  <circle cx="240" cy="218" r="4" fill="#dc2626"/>
+  <text x="228" y="222" text-anchor="end" font-size="11" fill="#dc2626">VCC (3.3V)</text>
+
+  <circle cx="240" cy="248" r="4" fill="#444"/>
+  <text x="228" y="252" text-anchor="end" font-size="11" fill="#444">GND</text>
+
+  <circle cx="240" cy="288" r="4" fill="#16a34a"/>
+  <text x="228" y="286" text-anchor="end" font-size="11" fill="#15803d">TX</text>
+  <text x="228" y="298" text-anchor="end" font-size="10" fill="#555">→ GPIO 18</text>
+
+  <circle cx="240" cy="328" r="4" fill="#16a34a" stroke="#555" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="228" y="326" text-anchor="end" font-size="11" fill="#15803d">RX</text>
+  <text x="228" y="338" text-anchor="end" font-size="10" fill="#555">← GPIO 17</text>
+
+  <!-- GPS ceramic patch antenna icon -->
+  <rect x="75" y="300" width="60" height="30" rx="3" fill="#dcfce7" stroke="#16a34a" stroke-width="1"/>
+  <text x="105" y="319" text-anchor="middle" font-size="10" fill="#15803d">antenna</text>
+
+  <!-- ══════════════════════════════════════════════
+       SSD1306 OLED (right)
+  ══════════════════════════════════════════════ -->
+  <rect x="660" y="260" width="190" height="180" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="755" y="284" text-anchor="middle" font-size="13" font-weight="bold" fill="#1d4ed8">SSD1306 OLED</text>
+  <text x="755" y="300" text-anchor="middle" font-size="10" fill="#555">0.96"  128×64  I2C 0x3C</text>
+
+  <!-- OLED "screen" representation -->
+  <rect x="685" y="308" width="140" height="80" rx="3" fill="#1e1e1e" stroke="#2563eb" stroke-width="1"/>
+  <text x="755" y="335" text-anchor="middle" font-size="9" fill="#60efff">=== GPS TEST ===</text>
+  <text x="755" y="350" text-anchor="middle" font-size="9" fill="#60efff">Fix: GPS  Sats: 8</text>
+  <text x="755" y="363" text-anchor="middle" font-size="9" fill="#60efff">Lat:  43.654321</text>
+  <text x="755" y="376" text-anchor="middle" font-size="9" fill="#60efff">Lon: -79.381234</text>
+  <text x="755" y="389" text-anchor="middle" font-size="9" fill="#60efff">HDOP: 0.9  Alt: 85m</text>
+
+  <!-- OLED pin labels (left side, facing ESP32) -->
+  <circle cx="660" cy="408" r="4" fill="#dc2626"/>
+  <text x="672" y="412" text-anchor="start" font-size="11" fill="#dc2626">VCC (3.3V)</text>
+
+  <circle cx="660" cy="428" r="4" fill="#444"/>
+  <text x="672" y="432" text-anchor="start" font-size="11" fill="#444">GND</text>
+
+  <!-- SDA with pull-up note -->
+  <circle cx="660" cy="340" r="4" fill="#1d4ed8"/>
+  <text x="672" y="338" text-anchor="start" font-size="11" fill="#1d4ed8">SDA ← GPIO 8</text>
+  <text x="672" y="350" text-anchor="start" font-size="9" fill="#666">pull-up on breakout ✓</text>
+
+  <!-- SCL with pull-up note -->
+  <circle cx="660" cy="370" r="4" fill="#1d4ed8" stroke="#555" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="672" y="368" text-anchor="start" font-size="11" fill="#1d4ed8">SCL ← GPIO 9</text>
+  <text x="672" y="380" text-anchor="start" font-size="9" fill="#666">pull-up on breakout ✓</text>
+
+  <!-- ══════════════════════════════════════════════
+       Wires: 3.3V rail (red)
+  ══════════════════════════════════════════════ -->
+  <!-- GPS VCC ← ESP32 3V3 left -->
+  <line x1="240" y1="218" x2="280" y2="218" stroke="#dc2626" stroke-width="2"/>
+  <line x1="280" y1="218" x2="280" y2="141" stroke="#dc2626" stroke-width="2"/>
+  <line x1="280" y1="141" x2="410" y2="141" stroke="#dc2626" stroke-width="2"/>
+
+  <!-- OLED VCC ← ESP32 3V3 right -->
+  <line x1="490" y1="141" x2="620" y2="141" stroke="#dc2626" stroke-width="2"/>
+  <line x1="620" y1="141" x2="620" y2="408" stroke="#dc2626" stroke-width="2"/>
+  <line x1="620" y1="408" x2="660" y2="408" stroke="#dc2626" stroke-width="2"/>
+
+  <!-- ══════════════════════════════════════════════
+       Wires: GND (dark gray)
+  ══════════════════════════════════════════════ -->
+  <!-- GPS GND ← ESP32 GND left -->
+  <line x1="240" y1="248" x2="278" y2="248" stroke="#444" stroke-width="2"/>
+  <line x1="278" y1="248" x2="278" y2="171" stroke="#444" stroke-width="2"/>
+  <line x1="278" y1="171" x2="410" y2="171" stroke="#444" stroke-width="2"/>
+
+  <!-- OLED GND ← ESP32 GND right -->
+  <line x1="490" y1="171" x2="622" y2="171" stroke="#444" stroke-width="2"/>
+  <line x1="622" y1="171" x2="622" y2="428" stroke="#444" stroke-width="2"/>
+  <line x1="622" y1="428" x2="660" y2="428" stroke="#444" stroke-width="2"/>
+
+  <!-- ══════════════════════════════════════════════
+       Wires: UART (green)  GPS TX → GPIO18, GPIO17 → GPS RX
+  ══════════════════════════════════════════════ -->
+  <!-- GPS TX → GPIO 18 (solid) -->
+  <line x1="240" y1="288" x2="290" y2="288" stroke="#16a34a" stroke-width="2"/>
+  <line x1="290" y1="288" x2="290" y2="220" stroke="#16a34a" stroke-width="2"/>
+  <line x1="290" y1="220" x2="410" y2="220" stroke="#16a34a" stroke-width="2"/>
+
+  <!-- GPIO 17 → GPS RX (dashed — less critical, optional) -->
+  <line x1="240" y1="328" x2="292" y2="328" stroke="#16a34a" stroke-width="2" stroke-dasharray="6,3"/>
+  <line x1="292" y1="328" x2="292" y2="270" stroke="#16a34a" stroke-width="2" stroke-dasharray="6,3"/>
+  <line x1="292" y1="270" x2="410" y2="270" stroke="#16a34a" stroke-width="2" stroke-dasharray="6,3"/>
+
+  <!-- ══════════════════════════════════════════════
+       Wires: I2C (blue)  GPIO8→SDA, GPIO9→SCL
+  ══════════════════════════════════════════════ -->
+  <!-- GPIO 8 → OLED SDA (solid) -->
+  <line x1="490" y1="340" x2="618" y2="340" stroke="#2563eb" stroke-width="2"/>
+  <line x1="618" y1="340" x2="660" y2="340" stroke="#2563eb" stroke-width="2"/>
+
+  <!-- GPIO 9 → OLED SCL (dashed) -->
+  <line x1="490" y1="390" x2="616" y2="390" stroke="#2563eb" stroke-width="2" stroke-dasharray="6,3"/>
+  <line x1="616" y1="390" x2="660" y2="370" stroke="#2563eb" stroke-width="2" stroke-dasharray="6,3"/>
+
+  <!-- ══════════════════════════════════════════════
+       Legend
+  ══════════════════════════════════════════════ -->
+  <rect x="50" y="490" width="800" height="54" rx="6" fill="#f8f9fa" stroke="#ccc" stroke-width="1"/>
+  <text x="70" y="510" font-size="11" fill="#333">Legend:</text>
+
+  <!-- Red power -->
+  <line x1="130" y1="506" x2="160" y2="506" stroke="#dc2626" stroke-width="2"/>
+  <text x="165" y="510" font-size="11" fill="#dc2626">3.3V power</text>
+
+  <!-- GND -->
+  <line x1="250" y1="506" x2="280" y2="506" stroke="#444" stroke-width="2"/>
+  <text x="285" y="510" font-size="11" fill="#444">GND</text>
+
+  <!-- UART solid -->
+  <line x1="340" y1="506" x2="370" y2="506" stroke="#16a34a" stroke-width="2"/>
+  <text x="375" y="510" font-size="11" fill="#15803d">UART (GPS TX→ESP32)</text>
+
+  <!-- UART dashed -->
+  <line x1="530" y1="506" x2="560" y2="506" stroke="#16a34a" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="565" y="510" font-size="11" fill="#15803d">UART optional (ESP32 TX→GPS)</text>
+
+  <!-- I2C solid -->
+  <line x1="130" y1="530" x2="160" y2="530" stroke="#2563eb" stroke-width="2"/>
+  <text x="165" y="534" font-size="11" fill="#1d4ed8">I2C SDA (GPIO 8)</text>
+
+  <!-- I2C dashed -->
+  <line x1="290" y1="530" x2="320" y2="530" stroke="#2563eb" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="325" y="534" font-size="11" fill="#1d4ed8">I2C SCL (GPIO 9)</text>
+
+  <text x="500" y="534" font-size="10" fill="#555">
+    SSD1306 breakout includes on-board I2C pull-ups — no external resistors needed
+  </text>
+
+</svg>
