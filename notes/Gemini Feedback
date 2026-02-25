@@ -1,0 +1,60 @@
+# Autonomous Race Buoy - System Design Evaluation
+**Last Updated:** 2026-02-25
+**Project Status:** Design & Hardware Specification Phase
+
+## 1. System Overview
+An autonomous, GPS-stabilized buoy system for sailboat racing, utilizing an ESP32-S3 and LoRa communication. The system features a "Master" buoy that sets course geometry based on real-time wind stability.
+
+---
+
+## 2. Remote Control Functionality
+The Remote Control (RC) acts as the Command & Control center for the Race Committee.
+
+### Key Controls
+* **Race Initialization:** Sends target coordinates to Slaves. This action is **software-locked** until all buoys report "On Station."
+* **Start Sequence:** Triggers the automated race countdown (5-4-1-0) and locks buoy positions.
+* **Manual Override/Cancel:** Stops the current race state and returns buoys to "Repositioning" mode.
+* **Recall to Shore:** Overrides all logic and triggers the "Return to Home" (RTH) behavior for the entire fleet.
+
+### Status Monitoring (The Dashboard)
+* **Fleet Health:** Real-time table showing Battery %, GPS Lock status, and Comms RSSI for all 4 units.
+* **Station-Keeping Alert:** Visual/Haptic alert if any buoy exceeds the **30m Failsafe Radius**.
+* **Wind Stability Indicator:** 60-second rolling buffer countdown. Green = Stable/Ready; Red = Shifting.
+
+---
+
+## 3. Control Logic & Navigation
+### "Leash Mode" (Battery Optimization)
+To extend the 4S battery runtime beyond 3-4 hours:
+* The buoy allows drift within a specified **Hold Radius** (3m default).
+* Motors engage only when the boundary is hit to drive the buoy back to the center of the coordinate.
+
+### Thrust Mixing
+* **Exponential Thrust Curve:** Implemented to provide high-precision, low-power pulses for station-keeping while maintaining high-torque capability for repositioning.
+* **Slew-Rate Limiting:** Prevents rapid current spikes and mechanical stress on the thruster mounts.
+
+### State Machine Gates
+1.  **Pre-Start:** Buoys move to GPS targets; Wind Master monitors $\pm 15^\circ$ stability.
+2.  **Ready:** All buoys within 3m and wind is stable. RC "Start" button enables.
+3.  **Locked:** Once the countdown starts, buoys ignore wind shifts and prioritize holding the "frozen" coordinate to maintain a fair start line.
+
+---
+
+## 4. Hardware & Electrical Architecture
+### Interference Mitigation
+* **Mast Height:** GPS, Compass, and LoRa antennas are mounted **50cm above the waterline** and electronics to avoid wave interference and magnetic deviation from motors.
+* **Power Isolation:** * **Rail A:** ESCs and Brushless Motors (High current).
+    * **Rail B:** ESP32, LoRa, GPS, and Sensors (Clean power).
+    * *Note: Both rails must share a Common Ground for PWM signal reference.*
+
+### Safety & Failsafes
+* **Comms Loss:** If LoRa signal is lost for >10 minutes, the buoy maintains its last known position. If signal loss persists, it triggers RTH to the launch coordinates.
+* **Drift Failsafe:** If a buoy drifts >30m from the target, it alerts the RC and awaits a "Continue" or "Return" command.
+
+---
+
+## 5. Next Steps / Action Items
+* [ ] **Compass Calibration:** Implement a routine to calibrate the magnetometer while thrusters are under load to account for EMF.
+* [ ] **LoRa Packet Optimization:** Define a binary struct to minimize airtime and improve update frequency.
+* [ ] **Field Testing:** Validate the 15kt wind hold capability using the 6m heavy-wind radius setting.
+* [ ] **Pinout Audit:** Verify `master-pinout.md` for potential GPIO strapping pin conflicts on the ESP32-S3.
