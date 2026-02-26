@@ -209,7 +209,8 @@ GPIO 1-3, 5-7, 24-25, 33-37, 40-42
 | OLED | 8-20 | Typical/max |
 | Compass | 0.1 | Minimal |
 | LEDs | 20-40 | Both on |
-| **Electronics Total** | ~150-250 mA | Typical |
+| Ultrasonic sensors (×3) | 5-15 | Transit only; sequential fire, 3.3V supply |
+| **Electronics Total** | ~155-265 mA | Typical |
 | Thrusters (idle) | 1000 mA | ESC idle |
 | Thrusters (low) | 5000-10000 mA | Position hold |
 | Thrusters (high) | 20000-40000 mA | Heavy correction |
