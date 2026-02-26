@@ -110,3 +110,29 @@ Both RC units share `BUOY_REMOTE` (ID = 5). The master accepts commands from eit
 | Initiate new race | BTN_START | Single press |
 | Cancel / abort race | BTN_STOP | Single press |
 | Recall fleet to shore (RTH) | BTN_STOP | Hold 3s (buzzer confirms before sending) |
+
+---
+
+## Power Budget (Remote Control Unit)
+
+| Component | Current (mA) | Notes |
+|-----------|--------------|-------|
+| ESP32 (normal) | 40-80 | WROOM-32 module, no WiFi |
+| LoRa TX | 120 | Brief — command packets only |
+| LoRa RX | 10-12 | Mostly idle, polling for master status |
+| LEDs (active) | 10-20 | Typically 1–2 active at a time |
+| Buzzer | 10-30 | Brief alerts only |
+| Buttons | <1 | Pull-up resistor current only |
+| **Total (typical)** | ~60-100 mA | LoRa RX + 1 LED on |
+| **Total (TX burst)** | ~170-220 mA | During packet send (brief) |
+
+**Battery runtime:**
+
+| Battery | Typical runtime |
+|---------|----------------|
+| 500 mAh LiPo | ~5–8 hours |
+| 1000 mAh LiPo | ~10–16 hours |
+
+A 500 mAh cell is sufficient for a full race day. 1000 mAh recommended for multi-day events or cold weather (reduced LiPo capacity).
+
+**Charging:** TP4056 module via USB-C. Full charge from empty: ~1–2 hours (500 mAh), ~2–4 hours (1000 mAh).
