@@ -47,7 +47,7 @@
 
 ### LoRa Parameters
 - **Bandwidth:** 125 kHz (balance of range and data rate)
-- **Spreading Factor:** 7 or 8 (SF7 = faster, SF8 = longer range)
+- **Spreading Factor:** SF7 (chosen for speed — adequate range for 500m open water)
 - **Coding Rate:** 4/5 (error correction)
 - **Preamble Length:** 8 symbols
 - **Sync Word:** 0x12 (private network)
@@ -59,46 +59,44 @@
 ## Communication Protocol
 
 ### Star Topology
-- **Master:** Broadcasts to all slaves
-- **Slaves:** Reply individually with STATUS
+- **Master:** Broadcasts ASSIGN to all slaves; sends MASTER_STATUS to RC units
+- **Slaves:** Reply with ACK_ASSIGN then periodic STATUS
+- **RC units:** Send race commands (RC_START/STOP/RTH); receive MASTER_STATUS
 
-### Message Structure
+### Packet Types
+All 7 packet types and their structs are defined in `common/protocol.h`.
+CRC16-CCITT checksums on all packets.
 
-#### ASSIGN (Master -> Slaves)
-```
-Byte 0: 0xA5 (Message type: ASSIGN)
-Byte 1: Buoy ID (0=StartA, 1=StartB, 2=Windward, 3=Leeward)
-Bytes 2-5: Target Latitude (float, IEEE 754)
-Bytes 6-9: Target Longitude (float, IEEE 754)
-Byte 10: Hold Radius (uint8, meters)
-Bytes 11-12: CRC16
-Total: 13 bytes
-```
+| Packet | Hex | Direction | Notes |
+|--------|-----|-----------|-------|
+| ASSIGN | 0xA5 | Master → Slave | Target GPS + hold radius |
+| ACK_ASSIGN | 0xAA | Slave → Master | Confirms receipt |
+| STATUS | 0x5A | Slave → Master | Position, battery, error flags |
+| PING_STATUS | 0x55 | Any | Heartbeat |
+| PKT_RC_START | 0xB1 | RC → Master | Initiate race |
+| PKT_RC_STOP | 0xB2 | RC → Master | Cancel / abort |
+| PKT_RC_RTH | 0xB3 | RC → Master | Recall fleet to home |
+| PKT_MASTER_STATUS | 0xC1 | Master → RC | Fleet state + fault flags |
 
-#### STATUS (Slave -> Master)
-```
-Byte 0: 0x5A (Message type: STATUS)
-Byte 1: Buoy ID
-Bytes 2-5: Current Latitude (float)
-Bytes 6-9: Current Longitude (float)
-Bytes 10-11: Distance to Target (uint16, cm)
-Byte 12: Battery Voltage (uint8, 0.1V units)
-Bytes 13-14: CRC16
-Total: 15 bytes
-```
+### Buoy IDs (`common/protocol.h`)
+- `BUOY_MASTER` = 0, `BUOY_START_A` = 1, `BUOY_START_B` = 2
+- `BUOY_WINDWARD` = 3, `BUOY_LEEWARD` = 4, `BUOY_REMOTE` = 5
 
 ## Timing
 
 ### Master Broadcast Interval
 - **Repositioning Mode:** Every 5 seconds
-- **Stable/Ready/Locked:** Every 30 seconds (keepalive)
+- **Ready/Locked:** Every 30 seconds (keepalive)
 
 ### Slave Reply Timing
-- Wait random delay (0-100ms) after receiving ASSIGN
-- Send STATUS immediately after processing
+Deterministic stagger to avoid collisions (not random):
+```
+delay = REPLY_DELAY_BASE_MS + (buoy_id × REPLY_DELAY_PER_ID_MS)
+```
+Values defined in `common/protocol.h`.
 
 ### Failsafe Timeout
-- If no ASSIGN received for 60 seconds: Enter RTH mode
+- If no ASSIGN received for 60 seconds (`COMMS_TIMEOUT_MS`): Enter RTH mode
 
 ## Arduino Library
 - Use: `RadioHead` library (RH_RF95 class)

@@ -1,6 +1,6 @@
-# Propulsion System Specifications (TBD)
+# Propulsion System Specifications
 
-**STATUS:** Hardware under evaluation - motors and ESCs not yet finalized
+**STATUS:** Hardware under procurement — control interface and GPIO assignments are finalised; thruster/ESC models not yet selected
 
 ## Requirements
 
@@ -61,10 +61,10 @@ const int PWM_NEUTRAL = 9830;  // 1.5ms neutral
 const int PWM_MAX = 13107;     // 2.0ms at 16-bit, 100Hz
 ```
 
-### GPIO Pin Assignments (from pinout documents)
-- **Left Thruster:** GPIO 47 (Slave), varies for Master
-- **Right Thruster:** GPIO 48 (Slave), varies for Master
-- Refer to pinout documentation for specific assignments
+### GPIO Pin Assignments
+- **Left Thruster:** GPIO 47 (all buoys — master and slaves)
+- **Right Thruster:** GPIO 48 (all buoys — master and slaves)
+- LEDC peripheral, channel 0 (left) and channel 1 (right)
 
 ## Testing Requirements
 

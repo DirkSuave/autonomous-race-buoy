@@ -95,7 +95,7 @@ Any GPIO can be PWM, recommend these safe pins:
 - **Left Thruster:** GPIO 47 (safe, not strapping pin)
 - **Right Thruster:** GPIO 48 (safe, onboard RGB LED but can be used)
 
-Alternative PWM pins: GPIO 1-7, 15-16, 19-20, 38-42
+Alternative PWM pins: GPIO 1-6, 38-42 (GPIO 7, 15, 16, 19, 20, 22, 23 are assigned — see below)
 
 **PWM Config:** 100 Hz, 16-bit resolution, use ledc peripheral
 
@@ -107,7 +107,7 @@ Alternative PWM pins: GPIO 1-7, 15-16, 19-20, 38-42
 
 **Recommended:** GPIO 4 (ADC1_CH3) for battery monitor
 - Voltage divider for 4S battery (16.8V max)
-- Divider ratio: 5:1 (3.3V ADC max)
+- Voltage divider: 100kΩ + 10kΩ (11:1 ratio) — 16.8V max → 1.53V ADC
 
 **Note:** ADC2 may conflict with WiFi usage. Prefer ADC1 channels (GPIO 1-10).
 
@@ -125,12 +125,18 @@ Alternative: GPIO 40-42 are also safe choices
 #### Master Buoy: Wind Speed (Pulse Counter)
 - **Wind Speed Input:** GPIO 6 (RTC GPIO, interrupt capable, safe)
 
-#### Remote Control Interface (Master Only - Optional)
-- **Start Race Button:** GPIO 7 (RTC GPIO, safe)
-- **Override Button:** GPIO 15 (safe, available)
-- **End Race Button:** GPIO 16 (safe, available)
+#### Horn Output (Master Only)
+- **Horn MOSFET Gate:** GPIO 7 (RTC GPIO, drives IRLZ44N → 12V marine horn)
 
-Use internal pull-ups, active LOW
+#### Collision Avoidance (All Buoys — active during transit)
+- **TRIG_FWD:** GPIO 15 — Forward JSN-SR04T/AJ-SR04M trigger
+- **TRIG_PORT:** GPIO 16 — Port-45° sensor trigger
+- **TRIG_STBD:** GPIO 19 — Starboard-45° sensor trigger
+- **ECHO_FWD:** GPIO 20 — Forward sensor echo
+- **ECHO_PORT:** GPIO 22 — Port-45° sensor echo
+- **ECHO_STBD:** GPIO 23 — Starboard-45° sensor echo
+
+Sensors powered from 3.3V rail (no level-shifting required on echo lines)
 
 ### Capacitive Touch GPIOs
 Touch sensors on GPIO 1-14 (T1-T14). Can still be used as regular GPIO.
@@ -159,14 +165,18 @@ GPIO 0-21 can wake ESP32 from deep sleep via ULP coprocessor.
 | Right Thruster | 48 | - | PWM, RGB LED onboard |
 | Green LED | 38 | - | Status indicator |
 | Red LED | 39 | - | Status indicator |
-| Start Button | 7 | ADC1_CH6, T7 | Master only, optional |
-| Override Button | 15 | ADC2_CH4, T14 | Master only, optional |
-| End Button | 16 | ADC2_CH5 | Master only, optional |
+| Horn MOSFET | 7 | ADC1_CH6, T7 | Master only — IRLZ44N gate |
+| Ultrasonic TRIG_FWD | 15 | ADC2_CH4, T14 | All buoys |
+| Ultrasonic TRIG_PORT | 16 | ADC2_CH5 | All buoys |
+| Ultrasonic TRIG_STBD | 19 | ADC2_CH8 | All buoys |
+| Ultrasonic ECHO_FWD | 20 | ADC2_CH9 | All buoys |
+| Ultrasonic ECHO_PORT | 22 | - | All buoys |
+| Ultrasonic ECHO_STBD | 23 | - | All buoys |
 
 ## Power Requirements
 - **Operating Voltage:** 3.3V (regulated on board)
 - **Input Voltage:** 5V via USB or 5V pin
-- **Current Draw:** ~80-120mA (WiFi active), ~20mA (deep sleep)
+- **Current Draw:** ~160-240mA (WiFi AP active), ~40-60mA (normal, no WiFi), ~20mA (deep sleep)
 
 ## Power Supply Design
 - 5V Buck converter from 4S battery (14.8-16.8V)
@@ -185,7 +195,7 @@ GPIO 0-21 can wake ESP32 from deep sleep via ULP coprocessor.
 - Flash for firmware and config storage (8MB)
 - Preferences library for persistent settings (NVS partition)
 
-## Arduino IDE Configuration
+## PlatformIO / Arduino Framework Configuration
 
 ### Default I2C
 ```cpp

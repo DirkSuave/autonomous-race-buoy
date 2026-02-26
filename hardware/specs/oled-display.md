@@ -48,17 +48,19 @@
 ## Display States
 
 ### Master States
-- **REPOSITIONING** - Wind unstable, updating positions
-- **STABLE** - Wind stable, ready to signal start
-- **READY** - Green light, awaiting start signal
+- **REPOSITIONING** - Wind unstable or buoys navigating to targets
+- **READY** - Wind stable ≥60s, all buoys on-station
+- **COUNTDOWN** - Horn sequence running (3 or 5 min)
 - **LOCKED** - Race active, positions frozen
+- **RTH** - Fleet recalled to home
 
 ### Slave States
-- **IDLE** - Awaiting first ASSIGN
-- **NAVIGATE** - Moving to target
-- **HOLD** - Within hold radius
-- **RTH** - Return to home (LoRa lost)
-- **CALIBRATE** - Compass calibration in progress
+- **INIT** - Awaiting first ASSIGN from master
+- **DEPLOY** - Navigating to assigned target position
+- **HOLD** - Within hold radius, maintaining station
+- **ADJUST** - Fine-tuning position (short drift detected)
+- **RECOVER** - Re-acquiring after extended drift
+- **FAILSAFE** - Return to home (LoRa lost >60s)
 
 ## Arduino Library
 - **Adafruit SSD1306**
@@ -78,6 +80,7 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 void setup() {
+  Wire.begin(8, 9);  // SDA=GPIO8, SCL=GPIO9 (ESP32-S3 explicit — do not omit)
   if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
     for(;;);
@@ -116,5 +119,5 @@ void setup() {
 ## Notes
 - OLED visibility is poor in direct sunlight (not critical for diagnostics)
 - Display is for setup and debugging, not operational monitoring
-- Consider adding external LED indicators for operational status
-- I2C bus is shared with compass on BE-880 module
+- Green LED (GPIO 38) and Red LED (GPIO 39) provide operational status visible in sunlight
+- I2C bus is shared with compass on BE-880 module (0x3C OLED + 0x0D compass — no conflict)

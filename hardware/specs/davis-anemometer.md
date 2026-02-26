@@ -135,39 +135,41 @@ bool isWindStable() {
 
 ## Race State Machine (Master)
 
+Wind stability directly drives state transitions in the master race state machine.
+
 ### States
 1. **REPOSITIONING**
-   - Wind unstable
-   - Continuously update slave target positions
-   - Red LED on
+   - Wind unstable (>15° shift in 60s rolling window), or buoys still navigating to targets
+   - Continuously recalculate and broadcast new slave target positions
+   - Blue LED on RC unit
    - Broadcast ASSIGN every 5 seconds
 
-2. **STABLE**
-   - Wind stable for 60 seconds
-   - Freeze geometry calculations
-   - Green LED on
-   - Transition to READY
+2. **READY**
+   - Wind stable ≥60s AND all slaves on-station
+   - Geometry frozen — positions sent only as 30s keepalive
+   - Green LED on RC unit
+   - Awaiting BTN_START from remote control
 
-3. **READY**
-   - Awaiting start signal from remote control
-   - Positions locked
-   - Green LED on
-   - Broadcast keepalive every 30 seconds
+3. **COUNTDOWN**
+   - Race start sequence initiated (BTN_START pressed)
+   - Master fires horn sequence (3-min or 5-min IRSA pattern)
+   - Positions remain frozen regardless of wind shifts
+   - White LED on RC unit
 
 4. **LOCKED**
-   - Race active (countdown started)
-   - Ignore all wind shifts
-   - Positions remain frozen
-   - Continue until "End Race" signal
+   - Countdown complete, race active
+   - Wind monitoring continues but positions are frozen
+   - White LED on RC unit
+   - Ends on BTN_STOP or PKT_RC_STOP from remote
 
-### Override Logic
-- Remote control can force READY state
-- Override active even if wind > 15° shift
-- Use for urgent race starts in unstable conditions
+5. **RTH**
+   - Fleet recall: all slaves return to home position
+   - Triggered by BTN_STOP hold 3s or PKT_RC_RTH
+   - Red LED on RC unit
 
 ## Power Requirements
 - **Supply Voltage:** 5-12V (check specific model)
-- **Current Draw:** ~5-10mA
+- **Current Draw:** ~1-5mA (resistive potentiometer vane + magnetic cup switch — no active electronics)
 - **Power from:** 5V buck converter rail
 
 ## Mounting Considerations
@@ -193,9 +195,8 @@ bool isWindStable() {
 - [ ] Test wind direction accuracy (manual rotation)
 - [ ] Verify 60-second rolling buffer
 - [ ] Test stability detection (simulate stable/unstable wind)
-- [ ] Validate state transitions (REPOSITIONING -> STABLE -> READY)
-- [ ] Test manual override functionality
-- [ ] Confirm LoRa broadcasts update correctly
+- [ ] Validate state transitions (REPOSITIONING → READY → COUNTDOWN → LOCKED)
+- [ ] Confirm LoRa broadcasts update correctly (ASSIGN every 5s in REPOSITIONING, keepalive every 30s in READY)
 
 ## Datasheet Location
 - Store in: `hardware/datasheets/Davis_Vantage_Pro_Anemometer.pdf`
