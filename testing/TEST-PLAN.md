@@ -297,7 +297,7 @@ No external distance library — `pulseIn()` is sufficient for Mode 1 (default) 
 
 | Signal | ESP32-S3 Pin | JSN-SR04T |
 |--------|-------------|-----------|
-| 5V | VIN | VCC (5V) |
+| 3.3V | 3V3 | VCC |
 | GND | GND | GND |
 | TRIG_FWD | GPIO 15 | Forward TRIG |
 | ECHO_FWD | GPIO 20 | Forward ECHO |
@@ -306,8 +306,9 @@ No external distance library — `pulseIn()` is sufficient for Mode 1 (default) 
 | TRIG_STBD | GPIO 19 | Starboard-45° TRIG |
 | ECHO_STBD | GPIO 23 | Starboard-45° ECHO |
 
-Sensors supplied from 5V buck converter rail (not 3.3V). Space transducer heads ≥15 cm
-apart. Mount 10–15 cm above waterline, tilted 5–10° upward.
+Sensors supplied from ESP32 3.3V rail — AJ-SR04M/JSN-SR04T rated 3–5V; 3.3V eliminates
+ECHO level-shifting (no voltage divider needed). Space transducer heads ≥15 cm apart.
+Mount 10–15 cm above waterline, tilted 5–10° upward.
 
 **Sensor geometry:**
 
