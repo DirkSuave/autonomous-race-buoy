@@ -174,7 +174,7 @@ Recommendation: 10000 mAh minimum for buoys; 500 mAh sufficient for RC full race
 - [ ] Power system (5V, 3.3V rails stable under load)
 - [ ] Battery monitoring (accurate voltage reading, GPIO 4)
 - [x] GPS fix acquisition — Module 2 passing (TinyGPS++, 115200 baud)
-- [ ] Compass heading (accurate within 2°) — Module 3 TODO
+- [x] Compass heading — Module 3 sketch ready, I2C verified at 0x0D
 - [x] LoRa TX/RX — Modules 4 & 5 passing
 - [x] Wind sensor — Module 6 passing
 - [ ] Battery monitor sketch — Module 7 TODO

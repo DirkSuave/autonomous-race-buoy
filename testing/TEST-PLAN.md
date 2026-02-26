@@ -11,7 +11,7 @@ Test in the order listed (simplest first) to isolate dependencies.
 |---|--------|-------------|-------------------|--------|
 | 1 | OLED Display | `oled_test.ino` | ESP32-S3 + SSD1306 | TODO |
 | 2 | GPS + OLED | `gps_test_display.ino` | ESP32-S3 + BE-880 + SSD1306 | **Ready** |
-| 3 | Compass | `compass_test.ino` | ESP32-S3 + BE-880 (I2C QMC5883) | TODO |
+| 3 | Compass | `compass_test/main.cpp` | ESP32-S3 + BE-880 (I2C QMC5883) + SSD1306 | **Ready** |
 | 4 | LoRa TX | `lora_test_tx.ino` | 2× ESP32-S3 + RFM95W | Ready |
 | 5 | LoRa RX | `lora_test_rx.ino` | 2× ESP32-S3 + RFM95W | Ready |
 | 6 | Wind Sensor | `wind_sensor_test.ino` | ESP32-S3 + Davis Vantage Pro | Ready |
@@ -115,29 +115,52 @@ OLED shows live status so the board can be tested away from a computer.
 
 ---
 
-## 3. Compass — `compass_test.ino` (TODO)
+## 3. Compass — `compass_test/main.cpp`
 
 **Purpose:** Read heading from the QMC5883L magnetometer inside the BE-880 module
-over I2C (shared bus with OLED).
+over I2C (shared bus with OLED). Includes a calibration mode to determine axis
+min/max offsets before final heading accuracy testing.
 
 **Required libraries (`lib_deps`):**
-- `mprograms/QMC5883LCompass` (or `dfrobot/DFRobot_QMC5883`)
+- `mprograms/QMC5883LCompass`
+- `adafruit/Adafruit SSD1306`
+- `adafruit/Adafruit GFX Library`
 
-**Wiring:** Same I2C bus as OLED (GPIO 8/9). The BE-880 QMC5883 typically appears
-at I2C address `0x0D`.
+**Wiring:** Same I2C bus as OLED (GPIO 8/9). QMC5883L in BE-880 appears at `0x0D`.
 
-**Expected serial output:**
+| Signal | ESP32-S3 Pin | Target |
+|--------|-------------|--------|
+| 3.3V | 3V3 | BE-880 VCC, OLED VCC |
+| GND | GND | BE-880 GND, OLED GND |
+| I2C SDA | GPIO 8 | BE-880 SDA + OLED SDA |
+| I2C SCL | GPIO 9 | BE-880 SCL + OLED SCL |
+
+**Calibration procedure (first-time setup):**
+1. Set `#define CALIBRATION_MODE 1` and flash
+2. Slowly rotate the board through all axes for ~30 seconds
+3. Note the `setCalibration(xMin, xMax, yMin, yMax, zMin, zMax)` line printed to serial
+4. Paste those values into the `CAL_*` defines at the top of `main.cpp`
+5. Set `#define CALIBRATION_MODE 0` and reflash
+
+**Expected serial output (normal mode):**
 ```
 Compass Test — QMC5883L
-I2C scan: 0x0D found
-Heading: 274.3°  X: -120  Y: 45  Z: 890
-Heading: 275.1°  ...
+I2C scan:
+  0x0D  <- QMC5883L
+  0x3C  <- OLED
+Running — rotate board to verify heading changes.
+Heading   X       Y       Z
+274°  NW   X:-120  Y:45  Z:890
+275°  NW   X:-118  Y:47  Z:888
 ```
+
+**Expected OLED:** Large heading + compass point (e.g. `274° NW`), raw XYZ below.
 
 **Pass criteria:**
 - I2C device found at `0x0D`
 - Heading changes smoothly when board is rotated by hand
-- No heading jump > 10° per reading cycle
+- Heading completes a full 360° sweep as board rotates
+- No heading jump > 10° per reading cycle (smoothing = 5 samples)
 
 ---
 
