@@ -10,7 +10,7 @@ Autonomous buoy system for sailboat racing. Buoys use GPS navigation, LoRa radio
 
 **Build system: VS Code + PlatformIO** (not Arduino IDE). Test sketches in `testing/` are PlatformIO `.cpp` files, each in their own subdirectory with a `[env:name]` entry in the root `platformio.ini`. Firmware development targets `esp32s3dev`.
 
-To develop with Arduino IDE or PlatformIO, the `common/` directory contains shared headers (`config.h`, `protocol.h`, `protocol.cpp`) that must be available to all firmware sketches.
+The `common/` directory at the project root contains shared headers (`config.h`, `protocol.h`, `protocol.cpp`) included by all firmware and test sketches via `-I${PROJECT_DIR}` in `platformio.ini`.
 
 ## Critical: ESP32-S3 Pin Assignments
 
@@ -38,7 +38,7 @@ To develop with Arduino IDE or PlatformIO, the `common/` directory contains shar
 - Fixed anchor position set at power-up
 - Davis Vantage Pro anemometer: monitors wind direction/speed
 - Broadcasts target coordinates to slave buoys via LoRa
-- Race state machine: `Repositioning → Stable → Ready → Locked`
+- Race state machine: `Repositioning → Ready → Countdown → Locked` (also RTH at any time)
 - Hosts WiFi AP for initial configuration
 
 **Slave Buoys** (Pin, Windward, Leeward)
@@ -49,32 +49,36 @@ To develop with Arduino IDE or PlatformIO, the `common/` directory contains shar
 
 ### Communication Protocol (`common/protocol.h`)
 
-Star topology LoRa network at 915 MHz (SF7, 125 kHz BW, CR4/5):
-- `ASSIGN` packet: master → slave target GPS coordinates
-- `ACK_ASSIGN`: slave → master confirmation
-- `STATUS` packet: slave → master position/battery/error telemetry
-- `PING_STATUS`: heartbeat
+Star topology LoRa network at 915 MHz (SF7, 125 kHz BW, CR4/5). All 7 packet types:
+- `ASSIGN` (0xA5): master → slave target GPS coordinates
+- `ACK_ASSIGN` (0xAA): slave → master confirmation
+- `STATUS` (0x5A): slave → master position/battery/error telemetry
+- `PING_STATUS` (0x55): heartbeat
+- `PKT_RC_START/STOP/RTH` (0xB1/B2/B3): remote → master race commands
+- `PKT_MASTER_STATUS` (0xC1): master → remote aggregate fleet state + fault flags
 
 Buoy state enum: `INIT → DEPLOY → HOLD → ADJUST → RECOVER → FAILSAFE`
 
-Error flags: `GPS_LOST`, `COMPASS_FAIL`, `LOW_BATTERY`, `MOTOR_FAIL`, `COMMS_LOST`, `WIND_FAIL`
+Error flags: `GPS_LOST`, `COMPASS_FAIL`, `LOW_BATTERY`, `MOTOR_FAIL`, `COMMS_LOST`, `WIND_FAIL`, `OBSTACLE`
 
 Checksum: CRC16-CCITT over packet bytes (declared in `protocol.h`, implemented in `protocol.cpp`).
 
 ### Race State Machine (Master)
 
-- **Repositioning:** Wind shifted >15° in 60s rolling window — master continuously recalculates and broadcasts new slave positions
-- **Stable:** Wind stable ≥60s — master signals Ready (green LED)
-- **Ready:** Awaiting race start from remote control unit
-- **Locked:** Race active — positions frozen regardless of wind changes
+- **Repositioning:** Wind unstable or buoys navigating to targets — blue LED on RC
+- **Ready:** Wind stable ≥60s, all buoys on-station — green LED on RC
+- **Countdown:** BTN_START pressed on RC → auto-starts; horn sequence runs (3 or 5 min)
+- **Locked:** Race active — positions frozen regardless of wind changes — white LED on RC
+- **RTH:** BTN_STOP held 3s — fleet recalled to home coordinates
 
 ### Firmware Directory Structure (planned, currently empty)
 
 ```
 firmware/
-  common/    # Shared libs: GPS utilities, LoRa wrapper, OLED driver
-  master/    # Master buoy firmware
-  slave/     # Slave buoy firmware
+  common/    # Shared libs: GPS utilities, LoRa wrapper, OLED driver, ultrasonic
+  master/    # Master buoy firmware (ESP32-S3)
+  slave/     # Slave buoy firmware (ESP32-S3)
+  remote/    # Remote control firmware (NodeMCU-32S — different MCU)
 ```
 
 ## Key Hardware
@@ -83,7 +87,9 @@ firmware/
 - **MCU:** ESP32-S3-DevKitC-1 (dual-core Xtensa, WiFi/BT, USB OTG)
 - **Radio:** Adafruit RFM95W LoRa 915 MHz (RadioHead `RH_RF95`)
 - **GPS/Compass:** BE-880 module (UART NMEA + I2C QMC5883) at **115200 baud** (reconfigured from factory 9600 — hardware-verified)
+- **Collision Avoidance:** 3× AJ-SR04M waterproof ultrasonic (150° arc, 3.3V supply, TRIG 15/16/19, ECHO 20/22/23)
 - **Anemometer:** Davis Vantage Pro (master only — pulse speed + analog 0–3.3V direction)
+- **Horn:** 12V marine horn via IRLZ44N MOSFET on GPIO 7 (master only)
 - **Display:** SSD1306 0.96" I2C OLED (128×64)
 - **Power:** 4S LiPo → 5V buck converter; monitor via ADC with 11:1 voltage divider
 
@@ -97,8 +103,10 @@ firmware/
 ## Reference Documentation
 
 - `docs/project-summary.md` — full system specification
-- `docs/firmware-architecture.md` — planned firmware module breakdown
-- `hardware/ESP32-S3-MIGRATION-SUMMARY.md` — **read before touching pin assignments**
-- `hardware/pinouts/master-pinout.md` / `slave-pinout.md` — authoritative pin tables
+- `docs/firmware-architecture.md` — firmware module breakdown, state machines, packet reference
+- `hardware/pinouts/master-pinout.md` — master buoy authoritative pin table + power budget
+- `hardware/pinouts/slave-pinout.md` — slave buoy authoritative pin table + power budget
+- `hardware/pinouts/remote-pinout.md` — NodeMCU-32S RC unit pin table + power budget
 - `hardware/components.md` — BOM and component status
-- `testing/` — working hardware validation sketches for GPS, LoRa TX/RX, wind sensor
+- `hardware/ESP32-S3-MIGRATION-SUMMARY.md` — background on ESP32 → ESP32-S3 pin changes
+- `testing/TEST-PLAN.md` — 9-module validation plan; GPS/LoRa/wind/ultrasonic sketches passing
