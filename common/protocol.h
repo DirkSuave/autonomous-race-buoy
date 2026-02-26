@@ -21,7 +21,9 @@ enum PacketType {
     PKT_STATUS      = 0x5A,  // Slave → master: position/battery telemetry
     PKT_PING_STATUS = 0x55,  // Heartbeat
     PKT_RC_START    = 0xB1,  // Remote control → master: start race
-    PKT_RC_STOP     = 0xB2   // Remote control → master: stop/abort race
+    PKT_RC_STOP     = 0xB2,  // Remote control → master: stop/abort race
+    PKT_RC_RTH      = 0xB3,  // Remote control → master: recall entire fleet to home coords
+    PKT_MASTER_STATUS = 0xC1 // Master → remote: aggregate fleet state
 };
 
 enum BuoyID {
@@ -79,10 +81,28 @@ struct __attribute__((packed)) PingStatusPacket {
     uint16_t checksum;      // CRC16-CCITT
 };
 
-// Remote control → master: start or stop race (4 bytes)
+// Remote control → master: start, stop, or RTH command (4 bytes)
+// Handles PKT_RC_START (0xB1), PKT_RC_STOP (0xB2), PKT_RC_RTH (0xB3)
 struct __attribute__((packed)) RcCommandPacket {
-    uint8_t  packet_type;   // PKT_RC_START (0xB1) or PKT_RC_STOP (0xB2)
+    uint8_t  packet_type;   // PKT_RC_START / PKT_RC_STOP / PKT_RC_RTH
     uint8_t  buoy_id;       // BUOY_REMOTE
+    uint16_t checksum;      // CRC16-CCITT
+};
+
+// Fleet state values for MasterStatusPacket.fleet_state
+#define FLEET_STATE_REPOSITIONING  1  // Buoys navigating to targets
+#define FLEET_STATE_READY          2  // All buoys on-station, countdown imminent
+#define FLEET_STATE_COUNTDOWN      3  // Start sequence horn running
+#define FLEET_STATE_LOCKED         4  // Race in progress, positions frozen
+#define FLEET_STATE_RTH            5  // Fleet returning to home coordinates
+#define FLEET_STATE_FAULT          6  // One or more buoys reporting an error
+
+// Master → remote: aggregate fleet state (6 bytes)
+struct __attribute__((packed)) MasterStatusPacket {
+    uint8_t  packet_type;   // PKT_MASTER_STATUS (0xC1)
+    uint8_t  buoy_id;       // BUOY_MASTER
+    uint8_t  fleet_state;   // FLEET_STATE_* value above
+    uint8_t  fault_flags;   // ERROR_FLAG_* bitmask (ORed across all reporting slaves)
     uint16_t checksum;      // CRC16-CCITT
 };
 

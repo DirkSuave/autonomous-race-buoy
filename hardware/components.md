@@ -49,18 +49,33 @@
   - Mode diagnostics
   - Per buoy installation
 
+## Start Horn (Master Buoy Only)
+- **Self-contained 12V electronic marine horn** (e.g. Fiamm MR3, Marco UP/C, or similar) — built-in oscillator, no separate amplifier needed; >100 dB
+  - ⚠️ The Whelen SA-350-MH is a **passive speaker** and requires a siren amplifier — do NOT use directly
+- **N-channel MOSFET** (e.g. IRLZ44N or similar logic-level gate) — driven from GPIO 7; switches 12V supply to horn
+- **1kΩ gate resistor** + **1N4007 flyback diode** across horn terminals
+- Horn fires 3-minute (default) or 5-minute IRSA start sequence; blast durations: long=2s, short=0.75s
+
 ## Indicators
-- **LED System**
-  - Green LED: Ready status
-  - Red LED: Not ready/repositioning
-  - Yellow LED: Race Started and Bouys keeping positions
-- **Remote Control Interface**
-  - Start race signal
-  - Manual override capability
-  - Race end trigger
-  - Return to home trigger
-  - Displays Master buoy status
-  - Possible Display or LED Indicators
+
+### Buoy Status LEDs (each buoy)
+- Green LED (GPIO 38): Ready status
+- Red LED (GPIO 39): Not ready / fault
+
+### Remote Control LEDs (4 LEDs per unit)
+- **Blue LED** (GPIO 26): Repositioning — buoys navigating to GPS targets
+- **Green LED** (GPIO 25): Race Ready / all buoys on-station
+- **Red LED** (GPIO 33): Fault or comms lost
+- **White LED** (GPIO 13): Race In Progress (LOCKED) / RTH in progress
+
+> LED set upgraded from 3 (amber/green/red) to 4 (blue/green/red/white).
+> Blue replaces amber on GPIO 26 (same pin). White is new on GPIO 13.
+
+### Remote Control Interface
+- BTN_START (GPIO 32): Single press → initiate new race (reposition + auto-countdown)
+- BTN_STOP (GPIO 34): Single press → cancel/abort; Hold 3s → RTH all buoys
+- Buzzer (GPIO 27): Button confirms, drift alerts (>10m), fault alerts, RTH confirmation
+- RC does NOT play start horn — horn is on the master buoy only
 
 ## Navigation Parameters
 - **Hold Radius:** Adjustable
@@ -73,7 +88,7 @@
 ## Remote Control Unit (qty: 2 identical units)
 - **MCU:** NodeMCU-32S (ESP32-WROOM-32) — smaller form factor than buoy boards
 - **Radio:** Adafruit RFM95W LoRa 915 MHz (same as buoys)
-- **Interface:** 3× status LEDs (amber/green/red), 2× waterproof buttons, buzzer
+- **Interface:** 4× status LEDs (blue/green/red/white), 2× waterproof buttons, buzzer
 - **Power:** Small LiPo (500–1000 mAh) via TP4056 charger
 - **Enclosure:** IP67/IP68 waterproof — dinghy racing, capsize exposure
 - **Accessories required:** TP4056 LiPo charger module, IP67 enclosure, sealed LED holders, waterproof push buttons, rubber USB-C port plug

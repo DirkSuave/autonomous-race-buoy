@@ -28,14 +28,20 @@
 
 ### User Interface
 
-| Component        | GPIO | Notes |
-|-----------------|------|-------|
-| LED_WIND (amber) | 26   | Wind unstable / repositioning |
-| LED_READY (green)| 25   | All buoys in position, safe to start |
-| LED_FAULT (red)  | 33   | Any buoy fault or error condition |
-| BTN_START        | 32   | Large waterproof momentary button |
-| BTN_STOP         | 34   | Large waterproof momentary button (input-only pin) |
-| BUZZER           | 27   | Audible confirmation when command accepted |
+| Component         | GPIO | Notes |
+|------------------|------|-------|
+| LED_BLUE          | 26   | Repositioning (buoys navigating to targets) |
+| LED_GREEN         | 25   | Race ready / race in progress |
+| LED_RED           | 33   | Fault or comms lost |
+| LED_WHITE         | 13   | Race in progress (LOCKED) / RTH in progress |
+| BTN_START         | 32   | Large waterproof momentary button |
+| BTN_STOP          | 34   | Large waterproof momentary button (input-only pin) |
+| BUZZER            | 27   | Button confirms, drift alerts, fault alerts, RTH confirm |
+
+> **Note:** LED set changed from 3 LEDs (amber/green/red) to 4 LEDs (blue/green/red/white).
+> Blue replaces amber on GPIO 26 (same pin, swap LED component).
+> White is new on GPIO 13 (safe GPIO on NodeMCU-32S — not used by VSPI here).
+> The RC buzzer is NOT used for the race start horn sequence (horn is on master buoy).
 
 ### Power Monitoring
 
@@ -47,13 +53,18 @@
 
 ## LED Status Meanings
 
-| State | Amber | Green | Red |
-|-------|-------|-------|-----|
-| Repositioning (wind unstable) | ON | off | off |
-| Ready (safe to start) | off | ON | off |
-| Fault (any buoy error) | off | off | ON |
-| Master comms lost | flash | flash | flash |
-| Race active (LOCKED) | off | slow flash | off |
+| System State | Red | Green | Blue | White |
+|-------------|-----|-------|------|-------|
+| Repositioning (buoys navigating) | off | off | fast flash | off |
+| Race Ready (all on-station) | off | steady | off | off |
+| Countdown (start sequence) | alt. flash | alt. flash | off | off |
+| Race In Progress (LOCKED) | off | off | off | steady |
+| Start / gun fires (0:00) | off | off | off | fast flash (brief) |
+| Fault (any buoy error) | steady | off | off | off |
+| Comms lost (>60s) | fast flash | off | fast flash | off |
+| RTH in progress | off | off | off | slow flash |
+
+> Red + Green **alternating** flash during countdown = each LED takes turns, not simultaneous.
 
 ---
 
@@ -83,7 +94,19 @@
 ## Communication
 
 The remote control communicates with the **master buoy only** via LoRa using:
-- `PKT_RC_START` (0xB1): Transition master from READY → LOCKED (race start)
-- `PKT_RC_STOP` (0xB2): Return master from LOCKED → REPOSITIONING (abort/end race)
+- `PKT_RC_START` (0xB1): Initiate new race — master repositions buoys, auto-starts countdown when all on-station
+- `PKT_RC_STOP` (0xB2): Cancel / abort — return all buoys to Repositioning state
+- `PKT_RC_RTH` (0xB3): Recall fleet to shore — master sends each slave its home coordinate (BTN_STOP hold 3s)
 
-Both units share `BUOY_REMOTE` (ID = 5). The master accepts commands from either unit without distinction. Packets use CRC16-CCITT checksum matching `common/protocol.h`.
+The master sends back:
+- `PKT_MASTER_STATUS` (0xC1): Aggregate fleet state byte + fault flags — RC uses this to drive LED patterns
+
+Both RC units share `BUOY_REMOTE` (ID = 5). The master accepts commands from either unit without distinction. Packets use CRC16-CCITT checksum matching `common/protocol.h`.
+
+### Button Commands
+
+| Action | Button | Press Pattern |
+|--------|--------|---------------|
+| Initiate new race | BTN_START | Single press |
+| Cancel / abort race | BTN_STOP | Single press |
+| Recall fleet to shore (RTH) | BTN_STOP | Hold 3s (buzzer confirms before sending) |

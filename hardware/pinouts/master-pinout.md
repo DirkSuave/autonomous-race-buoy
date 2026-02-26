@@ -83,6 +83,14 @@ PWM Config: 100 Hz, 16-bit resolution (LEDC peripheral)
 | GPIO 38   | Output   | Green (Ready) | Safe GPIO |
 | GPIO 39   | Output   | Red (Not Ready) | Safe GPIO |
 
+#### Start Horn
+| ESP32 Pin | Function | Notes |
+|-----------|----------|-------|
+| GPIO 7    | Horn trigger (MOSFET gate) | ADC1_CH6; drives N-channel MOSFET (e.g. IRLZ44N) → 12V marine horn |
+
+**Horn type:** Self-contained 12V electronic marine horn (built-in oscillator — e.g. Fiamm MR3, Marco UP/C). Do NOT use passive speakers (e.g. Whelen SA-350-MH) — they require a separate amplifier.
+**Horn driver circuit:** GPIO 7 → 1kΩ gate resistor → MOSFET gate; MOSFET drain → horn (+); horn (–) → 12V battery negative. Flyback diode (e.g. 1N4007) across horn terminals (cathode to +12V). MOSFET source to GND shared with ESP32.
+
 ⚠️ **Note:** Old pinout used GPIO 32/33 which are reserved for flash on ESP32-S3. Updated to safe GPIOs 38/39.
 
 #### Remote Control Interface
@@ -151,6 +159,7 @@ ESC Signals (3.3V PWM from ESP32)
 | 4    | Battery Monitor | ADC Input |
 | 5    | Wind Direction | ADC Input |
 | 6    | Wind Speed | Digital Input (interrupt) |
+| 7    | Horn trigger (MOSFET gate) | Digital Output |
 | 8    | I2C SDA | Communication |
 | 9    | I2C SCL | Communication |
 | 10   | SPI CS | Communication |
