@@ -13,16 +13,18 @@
 ### Pinout Diagrams
 - [Master Buoy Pinout](pinouts/master-pinout.md) - Wind Master connections
 - [Slave Buoy Pinout](pinouts/slave-pinout.md) - Slave buoy connections
+- [Remote Control Pinout](pinouts/remote-pinout.md) - NodeMCU-32S RC unit connections
 
 ### Datasheets
 Store vendor datasheets in `datasheets/` folder for reference:
 - ESP32-S3-DevKitC-1.pdf
 - RFM95W_datasheet.pdf
 - BE-880_GPS_module.pdf
-- HMC5883L_compass.pdf
-- Propulsion_system_TBD.pdf (ESC and thruster specs - under evaluation)
+- QMC5883L_compass.pdf
+- AJ-SR04M_ultrasonic.pdf
 - Davis_Vantage_Pro_Anemometer.pdf
 - SSD1306_OLED.pdf
+- ESC_thruster_specs.pdf (add when hardware selected)
 
 ### Schematics
 Circuit diagrams and wiring schematics in `schematics/` folder
@@ -34,69 +36,108 @@ Circuit diagrams and wiring schematics in `schematics/` folder
 |-----------|----------|-------|
 | ESP32-S3-DevKitC-1 | 1 | Main controller |
 | RFM95W LoRa Module | 1 | 915 MHz with antenna |
-| BE-880 GPS/Compass | 1 | UART + I2C |
-| 0.96" OLED Display | 1 | I2C, 128x64 |
-| Propulsion System | 1 | TBD - thrusters and ESCs under evaluation |
-| 4S LiPo Battery | 1 | 5000-10000 mAh |
-| 5V Buck Converter | 1 | 1.5A min, 14.8V input |
-| 1000µF Capacitor | 1 | 16V+ rating |
-| Green LED | 1 | With 220Ω resistor |
-| Red LED | 1 | With 220Ω resistor |
-| Voltage Divider Resistors | 2 | For battery monitor |
+| BE-880 GPS/Compass | 1 | UART 115200 baud + I2C |
+| AJ-SR04M Ultrasonic | 3 | Collision avoidance, 3.3V supply |
+| 0.96" OLED Display | 1 | I2C SSD1306, 128×64 |
+| Bilge Thruster ESC | 2 | Pending procurement |
+| Brushless Bilge Thruster | 2 | Pending procurement |
+| 4S LiPo Battery | 1 | 5000–10000 mAh |
+| 5V Buck Converter | 1 | ≥1.5 A, 14.8 V input |
+| 1000 µF Capacitor | 1 | 16 V+ rating, output of buck converter |
+| Green LED | 1 | GPIO 38, with current-limiting resistor |
+| Red LED | 1 | GPIO 39, with current-limiting resistor |
+| Voltage Divider Resistors | 2 | 100 kΩ + 10 kΩ, battery monitor (GPIO 4) |
 
 ### Master Buoy Additional
 | Component | Quantity | Notes |
 |-----------|----------|-------|
-| Davis Vantage Pro Anemometer | 1 | Wind speed/direction |
+| Davis Vantage Pro Anemometer | 1 | Wind speed (GPIO 6) + direction (GPIO 5) |
+| 12V Marine Horn | 1 | Self-contained electronic (e.g. Fiamm MR3) |
+| IRLZ44N N-channel MOSFET | 1 | Horn driver, gate on GPIO 7 |
+| 1 kΩ resistor | 1 | MOSFET gate resistor |
+| 1N4007 diode | 1 | Flyback protection across horn terminals |
 
-### Remote Control Unit (separate device)
-| Component | Quantity | Notes |
-|-----------|----------|-------|
-| Controller Board | 1 | TBD - ESP32 or similar |
-| LoRa Module | 1 | RFM95W 915 MHz |
-| Display | 1 | TBD - OLED or LCD |
-| Controls | TBD | Buttons/switches for race start and status |
-| Battery | 1 | TBD - rechargeable Li-ion |
+### Remote Control Units (×2)
+| Component | Quantity per unit | Notes |
+|-----------|------------------|-------|
+| NodeMCU-32S (ESP32-WROOM-32) | 1 | Different pin defaults from ESP32-S3 |
+| RFM95W LoRa Module | 1 | VSPI bus (GPIO 23/19/18/5) |
+| Blue LED | 1 | GPIO 26 — Repositioning |
+| Green LED | 1 | GPIO 25 — Race Ready |
+| Red LED | 1 | GPIO 33 — Fault |
+| White LED | 1 | GPIO 13 — Race Locked / RTH |
+| Waterproof momentary button | 2 | BTN_START GPIO 32, BTN_STOP GPIO 34 |
+| Piezo buzzer | 1 | GPIO 27 |
+| Single-cell LiPo | 1 | 500–1000 mAh |
+| TP4056 LiPo charger module | 1 | USB-C input |
+| IP67/IP68 enclosure | 1 | Capsize-rated |
+| Sealed LED holders | 4 | O-ring seal through enclosure wall |
+| Rubber USB-C port plug | 1 | Weatherproof when not charging |
 
-### Total System (4 Buoys + Remote Control)
+### Total System
 - 1 Master Buoy (Wind Master)
 - 3 Slave Buoys (Pin, Windward, Leeward)
-- 1 Remote Control Unit
+- 2 Remote Control Units (identical, same firmware)
 
 ## Power Budget
+
+Detailed per-unit budgets are in the pinout files. Summary below.
 
 ### Master Buoy
 | Component | Current (mA) | Notes |
 |-----------|--------------|-------|
-| ESP32 (WiFi) | 80-120 | Peak during config |
-| ESP32 (normal) | 40-60 | Operating mode |
+| ESP32 (normal) | 40-60 | No WiFi |
+| ESP32 (WiFi AP) | 160-240 | Config mode only |
 | GPS Module | 25-40 | Active tracking |
 | LoRa TX | 120 | Transmitting |
 | LoRa RX | 10-12 | Receiving/idle |
 | OLED | 8-20 | Typical/max |
-| Anemometer | 5-10 | Continuous |
+| Davis anemometer | 1-5 | Resistive; analog + pulse only |
 | Compass | 0.1 | Minimal |
 | LEDs | 20-40 | Both on |
-| **Electronics Total** | ~200-300 mA | Typical |
+| Ultrasonic sensors (×3) | 5-15 | Transit/RTH only |
+| **Electronics Total** | ~160-270 mA | Normal operation (no WiFi) |
+| Horn (12V rail) | 1000-3000 | Direct from battery; brief blasts only |
 | Thrusters (idle) | 1000 mA | ESC idle |
 | Thrusters (low) | 5000-10000 mA | Position hold |
 | Thrusters (high) | 20000-40000 mA | 15kt wind |
 | **System Total** | 5-40 A | Depends on conditions |
 
-### Battery Runtime Estimate
-- **5000 mAh @ 10A avg:** ~30 minutes
-- **5000 mAh @ 5A avg:** ~1 hour
-- **10000 mAh @ 10A avg:** ~1 hour
-- **10000 mAh @ 3A avg:** ~3 hours ✓ (target)
+### Slave Buoy
+| Component | Current (mA) | Notes |
+|-----------|--------------|-------|
+| ESP32 (normal) | 40-60 | No WiFi |
+| GPS + LoRa + OLED + Compass | ~55-92 | Combined peripherals |
+| Ultrasonic sensors (×3) | 5-15 | Transit/RTH only |
+| LEDs | 20-40 | Both on |
+| **Electronics Total** | ~155-265 mA | Typical |
+| Thrusters + **System Total** | 5-40 A | Same as master |
 
-Recommendation: 10000 mAh minimum for 3-4 hour operation
+### Remote Control Unit
+| Component | Current (mA) | Notes |
+|-----------|--------------|-------|
+| ESP32 (normal) | 40-80 | WROOM-32, no WiFi |
+| LoRa RX | 10-12 | Mostly idle |
+| LEDs (active) | 10-20 | 1–2 on at a time |
+| Buzzer | 10-30 | Brief alerts |
+| **Total typical** | ~60-100 mA | |
+
+### Battery Runtime Estimates
+| Unit | Battery | Runtime |
+|------|---------|---------|
+| Buoy | 10000 mAh @ 3A avg | ~3 hours ✓ (target) |
+| Buoy | 5000 mAh @ 3A avg | ~1.5 hours |
+| RC unit | 500 mAh | ~5–8 hours |
+| RC unit | 1000 mAh | ~10–16 hours |
+
+Recommendation: 10000 mAh minimum for buoys; 500 mAh sufficient for RC full race day.
 
 ## Interface Summary
 
 ### Communication Buses
-- **SPI:** LoRa module (shared bus)
-- **I2C:** OLED + Compass (shared bus, address 0x3C, 0x0D/0x1E)
-- **UART:** GPS module (dedicated)
+- **SPI (HSPI):** LoRa RFM95W — GPIO 11/13/12/10 (MOSI/MISO/SCK/CS), RST=14, IRQ=21
+- **I2C:** OLED (0x3C) + QMC5883L compass (0x0D) — GPIO 8 (SDA), 9 (SCL)
+- **UART1:** GPS BE-880 — GPIO 18 (RX), 17 (TX), **115200 baud** (reconfigured from factory 9600)
 
 ### Pin Conflicts
 - None, all interfaces use unique pins
@@ -131,13 +172,15 @@ Recommendation: 10000 mAh minimum for 3-4 hour operation
 
 ### Hardware Tests
 - [ ] Power system (5V, 3.3V rails stable under load)
-- [ ] Battery monitoring (accurate voltage reading)
-- [ ] GPS fix acquisition (<60s outdoors)
-- [ ] Compass heading (accurate within 2°)
-- [ ] LoRa range (500m minimum)
-- [ ] Thruster operation (forward/reverse/stop)
-- [ ] ESC slew rate limiting (smooth acceleration)
-- [ ] OLED display (all information visible)
+- [ ] Battery monitoring (accurate voltage reading, GPIO 4)
+- [x] GPS fix acquisition — Module 2 passing (TinyGPS++, 115200 baud)
+- [ ] Compass heading (accurate within 2°) — Module 3 TODO
+- [x] LoRa TX/RX — Modules 4 & 5 passing
+- [x] Wind sensor — Module 6 passing
+- [ ] Battery monitor sketch — Module 7 TODO
+- [ ] Thruster operation (forward/reverse/stop) — Module 8 pending hardware
+- [x] Collision avoidance sensors — Module 9 sketch complete
+- [ ] OLED display standalone — Module 1 TODO
 - [ ] LED indicators (correct state mapping)
 
 ### System Integration
@@ -180,8 +223,8 @@ Testing should be performed in a systematic way to verify each subsystem indepen
    - Verify no address conflicts
 
 2. **UART GPS Test**
-   - Configure baud rate (9600 typical for BE-880)
-   - Verify NMEA sentence reception outdoors
+   - Baud rate: **115200** (module reconfigured from factory 9600 — do not change)
+   - Verify NMEA sentence reception outdoors (char counter must increment immediately)
    - Test cold start acquisition time (<60s target)
    - Verify hot start time (<10s)
 
@@ -211,7 +254,15 @@ Testing should be performed in a systematic way to verify each subsystem indepen
    - Test direction accuracy (±5° target)
    - Verify stable readings over time
 
-### Phase 4: Propulsion System (TBD - awaiting hardware selection)
+4. **Collision Avoidance Test (all buoys) — Module 9**
+   - Sketch: `testing/ultrasonic_test/main.cpp`
+   - Sweep hand in front of each sensor — only that sensor should respond
+   - Object at <50 cm forward → red LED, STOP status
+   - Object at ~1 m forward, clear port → AVOID PORT
+   - Object at ~1 m forward, clear starboard → AVOID STBD
+   - All clear → green steady
+
+### Phase 4: Propulsion System (pending hardware procurement)
 1. **ESC Calibration**
    - Perform ESC calibration routine (full throttle range)
    - Verify neutral point (1500µs ±25µs)
@@ -255,11 +306,13 @@ Testing should be performed in a systematic way to verify each subsystem indepen
    - LoRa receiving commands from Master
    - Propulsion responding to navigation commands
 
-3. **Remote Control Integration (TBD)**
-   - LoRa communication with Master established
-   - Command transmission successful
-   - Status reception and display working
-   - Battery life adequate for full race day
+3. **Remote Control Integration**
+   - LoRa communication with Master established (PKT_RC_START → PKT_MASTER_STATUS loop)
+   - BTN_START single press → master initiates repositioning
+   - BTN_STOP hold 3s → master sends RTH to all slaves
+   - LED patterns match MASTER_STATUS fleet_state correctly
+   - Drift alert: buzzer + red LED when any slave > 10m from target
+   - Battery life adequate for full race day (≥8 hours on 500 mAh)
 
 ### Phase 7: Field Testing
 1. **Calm Water Tests**
@@ -305,12 +358,13 @@ Testing should be performed in a systematic way to verify each subsystem indepen
 ## Supplier Links
 
 ### Components
-- ESP32: Espressif or Adafruit
-- LoRa: Adafruit (Product ID: 3072)
-- GPS: Various (u-blox compatible)
-- Propulsion: TBD - evaluating marine thrusters and ESCs
-- Anemometer: Davis Instruments
-- Anemometer: Davis Instruments
+- ESP32-S3-DevKitC-1: Espressif or Adafruit
+- NodeMCU-32S: various (ESP32-WROOM-32 module)
+- LoRa RFM95W: Adafruit (Product ID: 3072)
+- GPS/Compass BE-880: various (u-blox compatible with QMC5883L)
+- AJ-SR04M ultrasonic: various (compatible with JSN-SR04T Mode 1)
+- Bilge thruster ESCs + thrusters: pending selection
+- Anemometer: Davis Instruments (Vantage Pro)
 
 ### Tools Required
 - Soldering iron & solder
