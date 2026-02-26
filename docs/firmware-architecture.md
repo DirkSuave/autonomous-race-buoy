@@ -63,11 +63,27 @@ testing/                  # Hardware validation sketches (PlatformIO .cpp, worki
 - Mode/state display
 
 ### Collision Avoidance (`common/ultrasonic/`)
-- Sequential fire of 3× AJ-SR04M sensors (TRIG/ECHO, Mode 1 — manual pulse)
+- Sequential fire of 3× AJ-SR04M sensors (TRIG/ECHO, Mode 1 — R19 open, no hardware mod)
 - `readSensor(trigPin, echoPin)` → distance cm via `pulseIn()`, 30 ms timeout
-- Zone logic: CLEAR (≥200 cm), AVOID PORT/STBD (<200 cm fwd), STOP (<50 cm any)
-- Active only during transit states (STATE_DEPLOY, STATE_FAILSAFE/RTH)
-- Sets `ERROR_FLAG_OBSTACLE` in STATUS packet when emergency stop triggered
+- Cycle period: 90 ms (3 sensors × ~30 ms each)
+- Active only during STATE_DEPLOY and STATE_FAILSAFE/RTH; inactive during HOLD/LOCKED
+- Transit speed capped at **1 m/s** during avoidance
+
+**Zone 1 — Avoidance (fwd_cm < 200):**
+- Reduce thrust to 50%
+- `port_cm > stbd_cm` → steer port 45°; else steer starboard 45°
+- Every 1s: if direct GPS bearing is clear → resume course
+
+**Zone 2 — Emergency Stop (any sensor < 50 cm):**
+- Full stop / brief reverse
+- Wait 2s, re-scan; if clear → re-enter Zone 1
+- Sets `ERROR_FLAG_OBSTACLE` in next STATUS packet
+
+> ⚠️ **Resolve before coding this module:**
+> 1. **Both sides blocked** — current logic always picks a side; risk of steering into a wall. Consider: reverse and hold until clear?
+> 2. **Moving obstacle hysteresis** — crossing boat triggers stop then self-clears. Add a minimum clear-time (e.g. 3 consecutive clear scans) before resuming?
+> 3. **Course re-acquisition** — after 45° avoidance turn, navigation must steer back to GPS target bearing (not just resume old heading). Nav controller must handle this explicitly.
+> 4. **Master response to OBSTACLE flag** — master currently ignores it. Consider: suppress new ASSIGN while slave is in avoidance mode?
 
 ### Utilities (`common/utils/`)
 - Rolling buffer for wind data (60s window, shift detection)

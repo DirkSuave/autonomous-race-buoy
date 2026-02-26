@@ -21,7 +21,7 @@ Build an autonomous buoy system for sailboat races:
 - **Navigation:** Bilge thruster ESCs (PWM via LEDC, 100 Hz) driving differential thrust to reach assigned coordinates.
 - **Autonomy:** Holds position within an adjustable radius (3m default, 6m in heavy wind).
 - **Failsafe:** Returns to initial "Home" GPS coordinate if LoRa signal is lost for **60 seconds** (`COMMS_TIMEOUT_MS`).
-- **Collision Avoidance:** 3× AJ-SR04M waterproof ultrasonic sensors (150° forward arc) active during transit. Avoidance zone < 200 cm; emergency stop < 50 cm.
+- **Collision Avoidance:** 3× AJ-SR04M waterproof ultrasonic sensors (150° forward arc) active during transit (STATE_DEPLOY and STATE_FAILSAFE/RTH only — inactive while HOLD/LOCKED). See full behaviour below.
 - **Calibration:** Performs compass calibration once the initial GPS target is reached.
 - **Orientation:** All buoys face into the wind to maintain course alignment.
 
@@ -49,9 +49,34 @@ Build an autonomous buoy system for sailboat races:
 - **Horn:** Master buoy only (12V marine horn via MOSFET). RC buzzer is NOT used for horn sequence.
 - **Blast Pattern (IRSA):** Long blast (2s) at 3:00, 2:00, 1:00; short blast (0.75s) at 0:30, 0:15, 0:05; long blast (2s) at 0:00 (gun).
 
-### 3. Race Active
+### 3. Collision Avoidance (Transit Only)
+
+Sensors fire sequentially every 90 ms (Mode 1 — R19 open, manual TRIG/ECHO). Active only during
+STATE_DEPLOY and STATE_FAILSAFE/RTH. Transit speed capped at **1 m/s** to ensure safe reaction time.
+
+**Zone 1 — Avoidance (`fwd < 200 cm`):**
+1. Reduce thrust to 50%
+2. Compare side clearance:
+   - `port_cm > stbd_cm` → steer port 45°, resume 50% thrust, navigate around
+   - `stbd_cm ≥ port_cm` → steer starboard 45°, resume 50% thrust, navigate around
+3. Every 1s: if direct bearing to GPS target is now clear → resume course
+
+**Zone 2 — Emergency Stop (`any sensor < 50 cm`):**
+1. Full stop (or brief reverse thrust)
+2. Wait 2s, re-scan
+3. If clear → return to Zone 1 avoidance
+4. Set `ERROR_FLAG_OBSTACLE` in next STATUS packet to master
+
+> ⚠️ **Resolve before firmware implementation:**
+> 1. **Both sides blocked** — current logic always picks a side; could steer into a wall. Decision needed: should it reverse and hold instead?
+> 2. **Moving obstacle** — a boat crossing ahead at 1 m will trigger emergency stop then self-clear. Acceptable, or add hysteresis?
+> 3. **Course re-acquisition** — after a 45° avoidance turn, the buoy must curve back to its GPS target bearing, not just resume the old heading. Nav logic must handle this.
+> 4. **Master response to OBSTACLE flag** — master currently takes no action. Should it suppress new ASSIGN commands while a slave is avoiding?
+
+### 4. Race Active
 - **Locked Mode:** Once countdown starts, buoy positions are **locked**. Wind shifts are ignored until the race is finished.
 - **End Race:** BTN_STOP on RC; Master returns to monitoring wind stability for the next start.
+- **Collision avoidance inactive** during LOCKED state — buoys are on station holding position, not transiting.
 
 ## Hardware Specifications
 - **Controller:** ESP32-S3-DevKitC-1 (buoys); NodeMCU-32S (remote control).
