@@ -59,7 +59,7 @@ start sequences. The master buoy fires a 12V marine horn for the IRSA start sequ
 | LoRa TX/RX test (Modules 4 & 5) | Passing |
 | Wind sensor test (Module 6) | Passing |
 | Collision avoidance test (Module 9) | Sketch complete — ready to flash |
-| OLED standalone (Module 1) | TODO |
+| OLED standalone (Module 1) | Skipped — covered by Module 2 |
 | Compass test (Module 3) | Passing |
 | Battery monitor (Module 7) | TODO |
 | ESC / thrusters (Module 8) | Pending hardware |

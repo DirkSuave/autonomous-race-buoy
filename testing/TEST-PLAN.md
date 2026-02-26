@@ -9,7 +9,7 @@ Test in the order listed (simplest first) to isolate dependencies.
 
 | # | Module | Test Sketch | Hardware Required | Status |
 |---|--------|-------------|-------------------|--------|
-| 1 | OLED Display | `oled_test.ino` | ESP32-S3 + SSD1306 | TODO |
+| 1 | OLED Display | — | Covered by Module 2 (GPS+OLED) | **Skipped** |
 | 2 | GPS + OLED | `gps_test_display.ino` | ESP32-S3 + BE-880 + SSD1306 | **Ready** |
 | 3 | Compass | `compass_test/main.cpp` | ESP32-S3 + BE-880 (I2C QMC5883) + SSD1306 | **Ready** |
 | 4 | LoRa TX | `lora_test_tx.ino` | 2× ESP32-S3 + RFM95W | Ready |
@@ -24,35 +24,11 @@ Always verify `config.h` against `hardware/pinouts/` before flashing a new board
 
 ---
 
-## 1. OLED Display — `oled_test.ino` (TODO)
+## 1. OLED Display — Skipped
 
-**Purpose:** Confirm I2C bus and SSD1306 display are wired and functional before
-adding any other modules.
-
-**Required libraries (`lib_deps`):**
-- `adafruit/Adafruit GFX Library`
-- `adafruit/Adafruit SSD1306`
-
-**Wiring:**
-
-| Signal | ESP32-S3 Pin | OLED Pin |
-|--------|-------------|----------|
-| 3.3V | 3V3 | VCC |
-| GND | GND | GND |
-| I2C SDA | GPIO 8 | SDA |
-| I2C SCL | GPIO 9 | SCL |
-
-**Expected serial output:**
-```
-OLED Test
-I2C address: 0x3C — found
-Display initialized OK
-Drawing test pattern...
-```
-
-**Pass criteria:**
-- OLED shows incrementing counter and filled/empty rectangles
-- No `SSD1306 allocation failed` in serial monitor
+OLED is exercised by Module 2 (GPS + OLED). If Module 2 passes with the display
+showing live GPS data, the SSD1306 and I2C bus are confirmed working. A dedicated
+OLED-only sketch is unnecessary.
 
 ---
 
