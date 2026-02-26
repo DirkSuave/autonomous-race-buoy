@@ -19,11 +19,21 @@
 - **Max Velocity:** 515 m/s
 
 ### UART Configuration
-- **Baud Rate:** 9600 (default — keep at default)
+- **Baud Rate:** **115200** (module reconfigured from factory default — see note below)
 - **Format:** 8N1 (8 data bits, no parity, 1 stop bit)
 - **Protocol:** NMEA 0183
 - **TX:** Module TX → ESP32-S3 GPIO 18 (RX)
 - **RX:** Module RX → ESP32-S3 GPIO 17 (TX)
+
+> ⚠️ **Baud rate is 115200 — not the factory default of 9600.**
+> The module on this project has been configured to 115200 baud. Hardware testing
+> confirmed that at 9600 baud, no valid GPS data was displayed and the character
+> counter did not increment — indicating a baud mismatch between the module and
+> the ESP32. After switching to 115200 in both `common/config.h` and the UART
+> initialisation, data flowed immediately and fix acquisition succeeded.
+>
+> **Do not revert to 9600.** If a replacement module arrives at 9600 (factory default),
+> it must be reconfigured using u-center or a UBX command before use.
 
 ### NMEA Sentences Used
 - **$GPGGA:** Position, altitude, fix quality, satellites

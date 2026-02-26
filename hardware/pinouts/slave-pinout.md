@@ -96,12 +96,14 @@ Spacing: ≥15 cm between transducer heads. Mount: 10–15 cm above waterline, t
 
 ### Not Used on Slave
 - **No Anemometer:** GPIO 5, 6 available for future use
-- **No Remote Control:** GPIO 7, 15, 16 available for future use
+- **No Horn:** GPIO 7 available for future use
 - **No WiFi AP:** WiFi radio typically disabled (LoRa only)
 
 ### Available for Expansion
-GPIO 5, 6, 7, 15, 16 (from master), plus GPIO 1-3, 19-20, 22-25, 33-37, 40-42
+GPIO 5, 6, 7, plus GPIO 1-3, 24-25, 33-37, 40-42
 (verify PSRAM conflicts on GPIO 35-37 if using N8R8 variant)
+
+Note: GPIO 15, 16, 19, 20, 22, 23 are assigned to ultrasonic collision avoidance sensors.
 
 ## Power Distribution
 
