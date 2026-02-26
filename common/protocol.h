@@ -113,6 +113,7 @@ struct __attribute__((packed)) MasterStatusPacket {
 #define ERROR_FLAG_MOTOR_FAIL   0x08
 #define ERROR_FLAG_COMMS_LOST   0x10
 #define ERROR_FLAG_WIND_FAIL    0x20
+#define ERROR_FLAG_OBSTACLE     0x40   // Collision avoidance stop triggered
 
 // Operational constants
 #define HOLD_RADIUS_DEFAULT         3       // metres (default slave hold radius)

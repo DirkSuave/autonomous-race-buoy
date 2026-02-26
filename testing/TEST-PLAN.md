@@ -17,6 +17,7 @@ Test in the order listed (simplest first) to isolate dependencies.
 | 6 | Wind Sensor | `wind_sensor_test.ino` | ESP32-S3 + Davis Vantage Pro | Ready |
 | 7 | Battery Monitor | `battery_monitor_test.ino` | ESP32-S3 + 11:1 voltage divider | TODO |
 | 8 | ESC / Thrusters | TBD | Hardware not yet purchased | Pending |
+| 9 | Collision Avoidance | `ultrasonic_test/main.cpp` | ESP32-S3 + 3× JSN-SR04T + SSD1306 | **Ready** |
 
 **Common dependency:** All sketches `#include "../common/config.h"` for pin assignments.
 Always verify `config.h` against `hardware/pinouts/` before flashing a new board.
@@ -275,6 +276,92 @@ both forward and reverse.
 - Standard RC ESC: 1000 µs = full reverse, 1500 µs = stop, 2000 µs = full forward
 - Arm sequence required on power-up (send 1500 µs for 2 seconds)
 - Perform initial tests with motors out of water and props removed
+
+---
+
+---
+
+## 9. Collision Avoidance — `ultrasonic_test/main.cpp`
+
+**Purpose:** Validate JSN-SR04T waterproof ultrasonic sensors for forward-arc obstacle
+detection. Three sensors provide 150° coverage: forward (0°), port-forward (−45°),
+and starboard-forward (+45°). Active during transit only (STATE_DEPLOY, STATE_FAILSAFE/RTH).
+
+**Required libraries (`lib_deps`):**
+- `adafruit/Adafruit SSD1306`
+- `adafruit/Adafruit GFX Library`
+
+No external distance library — `pulseIn()` is sufficient for Mode 1 (default) sensors.
+
+**Wiring:**
+
+| Signal | ESP32-S3 Pin | JSN-SR04T |
+|--------|-------------|-----------|
+| 5V | VIN | VCC (5V) |
+| GND | GND | GND |
+| TRIG_FWD | GPIO 15 | Forward TRIG |
+| ECHO_FWD | GPIO 20 | Forward ECHO |
+| TRIG_PORT | GPIO 16 | Port-45° TRIG |
+| ECHO_PORT | GPIO 22 | Port-45° ECHO |
+| TRIG_STBD | GPIO 19 | Starboard-45° TRIG |
+| ECHO_STBD | GPIO 23 | Starboard-45° ECHO |
+
+Sensors supplied from 5V buck converter rail (not 3.3V). Space transducer heads ≥15 cm
+apart. Mount 10–15 cm above waterline, tilted 5–10° upward.
+
+**Sensor geometry:**
+
+```
+        Port-45°   Forward   Starboard-45°
+            \         |         /
+       ±30°  \   ±30°|±30°   /   ← 60° beam cone per sensor
+               \      |      /
+  ──────────────\─────│─────/──── hull bow
+                  \   │   /
+                    BOW
+Coverage: 150° total arc
+```
+
+**Expected serial output:**
+```
+JSN-SR04T Collision Avoidance Test -- Module 9
+time_ms,fwd_cm,port_cm,stbd_cm,status
+1045,---,---,---,CLEAR
+1136,---,---,---,CLEAR
+1228,87,---,---,AVOID PORT
+1319,42,---,---,STOP
+```
+(`---` = no obstacle in range, ≥ 500 cm / timeout)
+
+**Expected OLED:**
+```
+= ULTRASONIC M9 =
+FWD:  87 cm
+PORT: --- cm
+STBD: --- cm
+
+> AVOID PORT
+```
+
+**Pass criteria:**
+1. Build `ultrasonic_test` env — compiles cleanly: `pio run -e ultrasonic_test`
+2. Flash and open serial monitor — CSV data flows every ~90 ms
+3. Sweep hand in front of each sensor individually — only the swept sensor changes
+   (confirms correct TRIG/ECHO pairing and no acoustic cross-talk)
+4. Hold object at < 50 cm forward → OLED shows `> STOP`, red LED steady
+5. Hold object at ~1 m forward, clear to port → OLED shows `> AVOID PORT`,
+   green LED flashing
+6. Hold object at ~1 m forward, clear to starboard → OLED shows `> AVOID STBD`,
+   green LED flashing
+7. All sensors clear → green LED steady, `> CLEAR`
+8. Optional: water-tank test — confirm no false returns from water surface
+
+**Troubleshooting:**
+- All distances read `---` → check 5V supply and GND wiring; confirm GPIO assignments
+- Echo never goes HIGH → TRIG pulse may not be reaching sensor; confirm TRIG GPIO
+- Multiple sensors fire simultaneously → ensure sequential `readSensor()` calls are not
+  parallelised; acoustic cross-talk is eliminated by sequential firing
+- False returns from water → tilt sensors 5–10° upward away from water surface
 
 ---
 

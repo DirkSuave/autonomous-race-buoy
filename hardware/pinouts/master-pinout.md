@@ -93,15 +93,23 @@ PWM Config: 100 Hz, 16-bit resolution (LEDC peripheral)
 
 ⚠️ **Note:** Old pinout used GPIO 32/33 which are reserved for flash on ESP32-S3. Updated to safe GPIOs 38/39.
 
+#### Ultrasonic Collision Avoidance (JSN-SR04T × 3)
+Active during transit states (STATE_DEPLOY, STATE_FAILSAFE/RTH). Idle during HOLD/LOCKED.
+
+| ESP32 Pin | Function   | Sensor               | Notes |
+|-----------|------------|----------------------|-------|
+| GPIO 15   | TRIG_FWD   | Forward (0°) trigger | Pure digital — ADC2 restriction irrelevant |
+| GPIO 16   | TRIG_PORT  | Port-45° trigger     | Pure digital |
+| GPIO 19   | TRIG_STBD  | Starboard-45° trigger| Pure digital |
+| GPIO 20   | ECHO_FWD   | Forward echo input   | Pure digital |
+| GPIO 22   | ECHO_PORT  | Port-45° echo input  | Pure digital |
+| GPIO 23   | ECHO_STBD  | Starboard-45° echo   | Pure digital |
+
+Supply: 5V from buck converter. Spacing: ≥15 cm between transducer heads.
+Mount: 10–15 cm above waterline, tilted 5–10° upward.
+
 #### Remote Control Interface
 **Note:** Remote control is a separate handheld device that communicates wirelessly via LoRa (not physical buttons on Master buoy).
-
-The following GPIO pins are **available but not currently assigned** for optional local control:
-| ESP32 Pin | Potential Use | Notes |
-|-----------|---------------|-------|
-| GPIO 7    | Reserved | ADC1_CH6, T7, RTC GPIO |
-| GPIO 15   | Reserved | ADC2_CH4, T14 |
-| GPIO 16   | Reserved | ADC2_CH5 |
 
 All race control commands (start, override, end) are sent from the separate remote control unit via LoRa radio.
 
@@ -167,16 +175,22 @@ ESC Signals (3.3V PWM from ESP32)
 | 12   | SPI SCK | Communication |
 | 13   | SPI MISO | Communication |
 | 14   | LoRa RST | Digital Output |
+| 15   | Ultrasonic TRIG_FWD | Digital Output |
+| 16   | Ultrasonic TRIG_PORT | Digital Output |
 | 17   | UART TX | Communication |
 | 18   | UART RX | Communication |
+| 19   | Ultrasonic TRIG_STBD | Digital Output |
+| 20   | Ultrasonic ECHO_FWD | Digital Input |
 | 21   | LoRa IRQ | Digital Input (interrupt) |
+| 22   | Ultrasonic ECHO_PORT | Digital Input |
+| 23   | Ultrasonic ECHO_STBD | Digital Input |
 | 38   | Green LED | Digital Output |
 | 39   | Red LED | Digital Output |
 | 47   | Left Thruster | PWM Output |
 | 48   | Right Thruster | PWM Output |
 
 ### Available for Expansion
-GPIO 1-3, 7, 15-16, 19-20, 22-25, 33-37, 40-42 (verify PSRAM conflicts on GPIO 35-37 if using N8R8 variant)
+GPIO 1-3, 24-25, 33-37, 40-42 (verify PSRAM conflicts on GPIO 35-37 if using N8R8 variant)
 
 ## Grounding
 

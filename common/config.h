@@ -31,6 +31,14 @@
 #define WIND_DIR_PIN            5   // Master only: 0–3.3V → 0–360°
 #define WIND_SPEED_PIN          6   // Master only: pulse counter
 
+// Ultrasonic collision avoidance (JSN-SR04T Mode 1 — 3× sensors, forward arc)
+#define ULTRASONIC_TRIG_FWD   15   // Forward sensor trigger
+#define ULTRASONIC_TRIG_PORT  16   // Port-45° sensor trigger
+#define ULTRASONIC_TRIG_STBD  19   // Starboard-45° sensor trigger
+#define ULTRASONIC_ECHO_FWD   20   // Forward sensor echo
+#define ULTRASONIC_ECHO_PORT  22   // Port-45° echo
+#define ULTRASONIC_ECHO_STBD  23   // Starboard-45° echo
+
 // Status LEDs
 #define LED_GREEN_PIN   38
 #define LED_RED_PIN     39
