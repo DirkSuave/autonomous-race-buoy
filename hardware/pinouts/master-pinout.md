@@ -105,8 +105,8 @@ Active during transit states (STATE_DEPLOY, STATE_FAILSAFE/RTH). Idle during HOL
 | GPIO 22   | ECHO_PORT  | Port-45° echo input  | Pure digital |
 | GPIO 23   | ECHO_STBD  | Starboard-45° echo   | Pure digital |
 
-Supply: 5V from buck converter. Spacing: ≥15 cm between transducer heads.
-Mount: 10–15 cm above waterline, tilted 5–10° upward.
+Supply: 3.3V from ESP32 rail (AJ-SR04M/JSN-SR04T rated 3–5V — eliminates ECHO level-shifting).
+Spacing: ≥15 cm between transducer heads. Mount: 10–15 cm above waterline, tilted 5–10° upward.
 
 #### Remote Control Interface
 **Note:** Remote control is a separate handheld device that communicates wirelessly via LoRa (not physical buttons on Master buoy).
