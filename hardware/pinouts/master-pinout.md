@@ -205,6 +205,30 @@ GPIO 1-3, 24-25, 33-37, 40-42 (verify PSRAM conflicts on GPIO 35-37 if using N8R
 - Keep high-current (ESC) and low-current (signal) grounds separate until common point
 - Twisted pair wiring for ESC power lines
 
+## Power Budget (Master Buoy)
+
+| Component | Current (mA) | Notes |
+|-----------|--------------|-------|
+| ESP32 (normal) | 40-60 | Operating mode, no WiFi |
+| ESP32 (WiFi AP) | 160-240 | Config mode only — not continuous |
+| GPS Module | 25-40 | Active tracking |
+| LoRa TX | 120 | Transmitting |
+| LoRa RX | 10-12 | Receiving/idle |
+| OLED | 8-20 | Typical/max |
+| Compass | 0.1 | Minimal |
+| Davis anemometer | 1-5 | Resistive load; analog + pulse only |
+| LEDs | 20-40 | Both on |
+| Ultrasonic sensors (×3) | 5-15 | Transit/RTH only; sequential fire, 3.3V supply |
+| **Electronics Total** | ~160-270 mA | Normal operation (no WiFi) |
+| Horn (12V rail) | 1000-3000 | Switched via MOSFET; direct from 12V battery, not 5V rail |
+| Thrusters (idle) | 1000 mA | ESC idle |
+| Thrusters (low) | 5000-10000 mA | Position hold |
+| Thrusters (high) | 20000-40000 mA | Heavy correction |
+| **System Total** | 5-40 A | Depends on conditions |
+
+**Battery Runtime:** ~3-4 hours with 10 Ah battery @ 3 A average electronics + thruster load.
+Horn draws from 12V battery directly — negligible effect on runtime (brief blasts only).
+
 ## Reference Documentation
 - [ESP32-S3 Specifications](../specs/esp32-s3.md) - Complete GPIO details and restrictions
 - [RFM95W LoRa](../specs/rfm95w-lora.md) - LoRa module pinout
